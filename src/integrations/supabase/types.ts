@@ -77,6 +77,62 @@ export type Database = {
         }
         Relationships: []
       }
+      fetch_configurations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          keywords: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          keywords: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          keywords?: string
+        }
+        Relationships: []
+      }
+      fetch_history: {
+        Row: {
+          articles_count: number
+          configuration_id: string
+          created_at: string
+          error: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          articles_count: number
+          configuration_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          status: string
+        }
+        Update: {
+          articles_count?: number
+          configuration_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fetch_history_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "fetch_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

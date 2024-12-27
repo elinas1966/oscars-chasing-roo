@@ -12,52 +12,86 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Fetching articles from GNews...');
-    
-    // Fetch articles from GNews API
-    const response = await fetch(
-      `https://gnews.io/api/v4/search?q=movie&lang=en&country=us&max=10&apikey=${Deno.env.get('GNEWS_API_KEY')}`
-    );
+    const { keywords, mode } = await req.json();
+    console.log(`Fetching articles for keywords: ${keywords}, mode: ${mode}`);
 
-    if (!response.ok) {
-      throw new Error(`GNews API error: ${response.statusText}`);
+    let fetchConfigurations;
+    if (mode === 'scheduled') {
+      // For scheduled jobs, get all active configurations
+      const { data: configs, error: configError } = await supabaseClient
+        .from('fetch_configurations')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(3); // Get the 3 most recent configurations
+
+      if (configError) throw configError;
+      fetchConfigurations = configs;
+    } else {
+      // For manual fetches, use the provided keywords
+      fetchConfigurations = [{ id: null, keywords }];
     }
 
-    const data = await response.json();
-    console.log(`Found ${data.articles?.length ?? 0} articles`);
+    let totalArticles = 0;
+    for (const config of fetchConfigurations) {
+      console.log(`Processing configuration with keywords: ${config.keywords}`);
+      
+      const response = await fetch(
+        `https://gnews.io/api/v4/search?q=${encodeURIComponent(config.keywords)}&lang=en&country=us&max=10&apikey=${Deno.env.get('GNEWS_API_KEY')}`
+      );
 
-    // Transform and insert articles
-    const articles = data.articles.map((article: any) => ({
-      title: article.title,
-      summary: article.description,
-      source: article.source.name,
-      url: article.url,
-      language: 'EN',
-      date: new Date(article.publishedAt).toISOString().split('T')[0],
-    }));
+      if (!response.ok) {
+        throw new Error(`GNews API error: ${response.statusText}`);
+      }
 
-    // Insert articles into the database
-    const { error } = await supabaseClient
-      .from('articles')
-      .insert(articles);
+      const data = await response.json();
+      console.log(`Found ${data.articles?.length ?? 0} articles for keywords: ${config.keywords}`);
 
-    if (error) {
-      console.error('Error inserting articles:', error);
-      throw error;
+      const articles = data.articles.map((article: any) => ({
+        title: article.title,
+        summary: article.description,
+        source: article.source.name,
+        url: article.url,
+        language: 'EN',
+        date: new Date(article.publishedAt).toISOString().split('T')[0],
+      }));
+
+      const { error: insertError } = await supabaseClient
+        .from('articles')
+        .insert(articles);
+
+      if (insertError) {
+        console.error('Error inserting articles:', insertError);
+        throw insertError;
+      }
+
+      // Record fetch history
+      const { error: historyError } = await supabaseClient
+        .from('fetch_history')
+        .insert({
+          configuration_id: config.id,
+          articles_count: articles.length,
+          status: 'success'
+        });
+
+      if (historyError) {
+        console.error('Error recording fetch history:', historyError);
+        throw historyError;
+      }
+
+      totalArticles += articles.length;
     }
 
-    console.log('Articles successfully inserted into database');
+    console.log(`Successfully processed all configurations, total articles: ${totalArticles}`);
 
     return new Response(
       JSON.stringify({ 
         message: 'Articles fetched and stored successfully',
-        count: articles.length 
+        count: totalArticles
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
