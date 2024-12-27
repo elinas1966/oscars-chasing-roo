@@ -1,25 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Trash2, Edit2, X, Check } from "lucide-react";
-import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-
-interface Article {
-  id: string;
-  title: string;
-  summary: string;
-  source: string;
-  url: string;
-  date: string;
-  language: string;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArticleCard } from "./ArticleCard";
+import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -148,6 +133,10 @@ export const ArticleList = () => {
     updateArticle.mutate({ ...editForm, id: articleId });
   };
 
+  const handleEditFormChange = (field: keyof Article, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
   if (isLoading) {
     return (
       <section className="py-16 px-4">
@@ -174,6 +163,8 @@ export const ArticleList = () => {
     );
   }
 
+  const groupedArticles = articles ? groupArticlesBySourceAndDate(articles) : {};
+
   return (
     <section className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -191,125 +182,30 @@ export const ArticleList = () => {
           </select>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2">
-          {articles && articles.length > 0 ? (
-            articles.map((article) => (
-              <Card key={article.id} className="article-card p-6">
-                {editingArticle === article.id ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Title</label>
-                      <Input
-                        value={editForm.title}
-                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Summary</label>
-                      <Textarea
-                        value={editForm.summary}
-                        onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Source</label>
-                      <Input
-                        value={editForm.source}
-                        onChange={(e) => setEditForm({ ...editForm, source: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">URL</label>
-                      <Input
-                        value={editForm.url}
-                        onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Language</label>
-                      <select
-                        value={editForm.language}
-                        onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
-                        className="w-full border border-input bg-background px-3 py-2 text-sm rounded-md"
-                      >
-                        <option value="EN">English</option>
-                        <option value="ES">Spanish</option>
-                        <option value="FR">French</option>
-                      </select>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancelEdit}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleSaveEdit(article.id)}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex gap-2 items-center">
-                        <Badge variant="outline" className="text-primary border-primary">
-                          {article.language}
-                        </Badge>
-                        {isAdmin && (
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(article)}
-                              className="text-primary hover:text-primary/80"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteArticle.mutate(article.id)}
-                              className="text-destructive hover:text-destructive/80"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-400">
-                        {format(new Date(article.date), "MMM d, yyyy")}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-serif mb-3">{article.title}</h3>
-                    <p className="text-gray-400 mb-4">{article.summary}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">{article.source}</span>
-                      <a 
-                        href={article.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 transition-colors"
-                      >
-                        Read More →
-                      </a>
-                    </div>
-                  </>
-                )}
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-2 text-center py-8">
-              <p className="text-gray-400">No articles found for the selected language.</p>
+        <div className="space-y-12">
+          {Object.entries(groupedArticles).map(([source, sourceArticles]) => (
+            <div key={source} className="space-y-6">
+              <h3 className="text-2xl font-serif text-primary/80 border-b pb-2">
+                {source}
+              </h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                {sourceArticles.map((article) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    isAdmin={isAdmin}
+                    isEditing={editingArticle === article.id}
+                    editForm={editForm}
+                    onEdit={handleEdit}
+                    onDelete={(id) => deleteArticle.mutate(id)}
+                    onCancelEdit={handleCancelEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onEditFormChange={handleEditFormChange}
+                  />
+                ))}
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </section>
