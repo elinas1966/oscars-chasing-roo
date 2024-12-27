@@ -58,7 +58,43 @@ export default {
       animation: {
         fadeIn: "fadeIn 0.5s ease-in-out",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            color: '#fff',
+            a: {
+              color: '#C4A962',
+              '&:hover': {
+                color: '#C4A962',
+                opacity: 0.8,
+              },
+            },
+            h1: {
+              color: '#C4A962',
+              fontFamily: 'Playfair Display, serif',
+            },
+            h2: {
+              color: '#C4A962',
+              fontFamily: 'Playfair Display, serif',
+            },
+            h3: {
+              color: '#C4A962',
+              fontFamily: 'Playfair Display, serif',
+            },
+            h4: {
+              color: '#C4A962',
+              fontFamily: 'Playfair Display, serif',
+            },
+            strong: {
+              color: '#fff',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography")
+  ],
 } satisfies Config;
