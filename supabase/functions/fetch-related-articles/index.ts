@@ -9,7 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -43,68 +43,97 @@ serve(async (req) => {
     
     if (configError) throw configError;
 
-    // Construct Google Search URL
-    const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${Deno.env.get('GOOGLE_API_KEY')}&cx=${Deno.env.get('GOOGLE_SEARCH_ENGINE_ID')}&q=${encodeURIComponent(cleanKeywords)}&num=10`;
-    
-    console.log('Making Google Search API request');
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
-
-    if (!searchResponse.ok) {
-      console.error('Google Search API error:', searchData);
-      throw new Error(`Google Search API error: ${searchResponse.statusText}`);
-    }
-
     const articles = [];
     let successfulScrapes = 0;
 
-    for (const item of searchData.items || []) {
-      try {
-        console.log(`Scraping URL: ${item.link}`);
-        const response = await fetch(item.link);
-        const html = await response.text();
-        
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        if (!doc) {
-          console.log(`Failed to parse HTML for ${item.link}`);
-          continue;
-        }
+    // Fetch from GNews
+    try {
+      const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(cleanKeywords)}&token=${Deno.env.get('GNEWS_API_KEY')}&max=10&lang=en`;
+      console.log('Making GNews API request');
+      const gnewsResponse = await fetch(gnewsUrl);
+      const gnewsData = await gnewsResponse.json();
 
-        // Extract meta description or first paragraph
-        let summary = '';
-        const metaDesc = doc.querySelector('meta[name="description"]');
-        if (metaDesc && metaDesc.getAttribute('content')) {
-          summary = metaDesc.getAttribute('content');
-        } else {
-          const firstParagraph = doc.querySelector('p');
-          if (firstParagraph) {
-            summary = firstParagraph.textContent;
-          }
-        }
-
-        // Clean and truncate summary
-        summary = summary.trim();
-        if (summary.length > 500) {
-          summary = summary.substring(0, 497) + '...';
-        }
-
-        if (summary) {
+      if (gnewsResponse.ok && gnewsData.articles) {
+        for (const article of gnewsData.articles) {
           articles.push({
-            title: item.title,
-            summary,
-            source: new URL(item.link).hostname,
-            url: item.link,
+            title: article.title,
+            summary: article.description,
+            source: new URL(article.url).hostname,
+            url: article.url,
             language: 'EN',
-            date: new Date().toISOString().split('T')[0],
+            date: article.publishedAt.split('T')[0],
           });
           successfulScrapes++;
         }
-      } catch (error) {
-        console.error(`Error scraping ${item.link}:`, error);
-        continue;
+      } else {
+        console.error('GNews API error:', gnewsData);
       }
+    } catch (error) {
+      console.error('Error fetching from GNews:', error);
+    }
+
+    // Fetch from Google Custom Search
+    try {
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${Deno.env.get('GOOGLE_API_KEY')}&cx=${Deno.env.get('GOOGLE_SEARCH_ENGINE_ID')}&q=${encodeURIComponent(cleanKeywords)}&num=10`;
+      
+      console.log('Making Google Search API request');
+      const searchResponse = await fetch(searchUrl);
+      const searchData = await searchResponse.json();
+
+      if (searchResponse.ok && searchData.items) {
+        for (const item of searchData.items) {
+          try {
+            console.log(`Scraping URL: ${item.link}`);
+            const response = await fetch(item.link);
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            if (!doc) {
+              console.log(`Failed to parse HTML for ${item.link}`);
+              continue;
+            }
+
+            // Extract meta description or first paragraph
+            let summary = '';
+            const metaDesc = doc.querySelector('meta[name="description"]');
+            if (metaDesc && metaDesc.getAttribute('content')) {
+              summary = metaDesc.getAttribute('content');
+            } else {
+              const firstParagraph = doc.querySelector('p');
+              if (firstParagraph) {
+                summary = firstParagraph.textContent;
+              }
+            }
+
+            // Clean and truncate summary
+            summary = summary.trim();
+            if (summary.length > 500) {
+              summary = summary.substring(0, 497) + '...';
+            }
+
+            if (summary) {
+              articles.push({
+                title: item.title,
+                summary,
+                source: new URL(item.link).hostname,
+                url: item.link,
+                language: 'EN',
+                date: new Date().toISOString().split('T')[0],
+              });
+              successfulScrapes++;
+            }
+          } catch (error) {
+            console.error(`Error scraping ${item.link}:`, error);
+            continue;
+          }
+        }
+      } else {
+        console.error('Google Search API error:', searchData);
+      }
+    } catch (error) {
+      console.error('Error fetching from Google Search:', error);
     }
 
     // Record fetch history
