@@ -6,12 +6,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const FetchArticles = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [keywords, setKeywords] = useState("");
   const [isFetching, setIsFetching] = useState(false);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(true);
   const [fetchDetails, setFetchDetails] = useState<{
     totalArticles?: number;
     gnewsArticles?: number;
@@ -87,7 +89,6 @@ const FetchArticles = () => {
       
       if (error) throw error;
 
-      // Parse the detailed fetch results
       setFetchDetails({
         totalArticles: data.count,
         gnewsArticles: data.gnewsCount || 0,
@@ -114,6 +115,10 @@ const FetchArticles = () => {
     }
   };
 
+  const toggleHistory = () => {
+    setIsHistoryExpanded(!isHistoryExpanded);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -132,7 +137,6 @@ const FetchArticles = () => {
           </Button>
         </div>
         
-        {/* Fetch Details */}
         {isFetching ? (
           <div className="mt-4 space-y-2">
             <Skeleton className="h-4 w-full" />
@@ -160,25 +164,42 @@ const FetchArticles = () => {
       </Card>
 
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Fetch History</h2>
-        {isLoadingHistory ? (
-          <p>Loading history...</p>
-        ) : (
-          <div className="space-y-4">
-            {fetchHistory?.map((entry) => (
-              <div key={entry.id} className="border-b pb-2">
-                <p className="font-medium">Keywords: {entry.fetch_configurations.keywords}</p>
-                <p>Articles fetched: {entry.articles_count}</p>
-                <p>Status: {entry.status}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(entry.created_at).toLocaleString()}
-                </p>
-                {entry.error && (
-                  <p className="text-red-500 text-sm">{entry.error}</p>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Fetch History</h2>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={toggleHistory}
+            className="text-muted-foreground"
+          >
+            {isHistoryExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        
+        {isHistoryExpanded && (
+          isLoadingHistory ? (
+            <p>Loading history...</p>
+          ) : (
+            <div className="space-y-4">
+              {fetchHistory?.map((entry) => (
+                <div key={entry.id} className="border-b pb-2">
+                  <p className="font-medium">Keywords: {entry.fetch_configurations.keywords}</p>
+                  <p>Articles fetched: {entry.articles_count}</p>
+                  <p>Status: {entry.status}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(entry.created_at).toLocaleString()}
+                  </p>
+                  {entry.error && (
+                    <p className="text-red-500 text-sm">{entry.error}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
         )}
       </Card>
     </div>
