@@ -45,11 +45,18 @@ serve(async (req) => {
       );
 
       if (!response.ok) {
-        throw new Error(`GNews API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('GNews API error:', errorText);
+        throw new Error(`GNews API error: ${response.statusText}. ${errorText}`);
       }
 
       const data = await response.json();
       console.log(`Found ${data.articles?.length ?? 0} articles for keywords: ${config.keywords}`);
+
+      if (!data.articles || !Array.isArray(data.articles)) {
+        console.error('Invalid response from GNews:', data);
+        throw new Error('Invalid response from GNews API');
+      }
 
       const articles = data.articles.map((article: any) => ({
         title: article.title,

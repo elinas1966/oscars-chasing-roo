@@ -44,9 +44,17 @@ const FetchArticles = () => {
 
   const { mutate: saveFetchConfiguration } = useMutation({
     mutationFn: async (keywords: string) => {
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("No authenticated user");
+
       const { error } = await supabase
         .from("fetch_configurations")
-        .insert([{ keywords }]);
+        .insert([{ 
+          keywords,
+          created_by: user.id
+        }]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -57,6 +65,7 @@ const FetchArticles = () => {
       });
     },
     onError: (error) => {
+      console.error('Error saving fetch configuration:', error);
       toast({
         title: "Error",
         description: "Failed to save fetch configuration: " + error.message,
