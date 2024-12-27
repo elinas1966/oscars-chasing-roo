@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,11 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 
 const Admin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [session, setSession] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     summary: "",
@@ -27,6 +31,40 @@ const Admin = () => {
     language: "EN",
   });
   const [isFetching, setIsFetching] = useState(false);
+
+  // Check authentication and admin status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user?.id) {
+        checkAdminStatus(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user?.id) {
+        checkAdminStatus(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdminStatus = async (userId) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error checking admin status:', error);
+      return;
+    }
+    
+    setIsAdmin(data.role === 'admin');
+  };
 
   const { mutate: addArticle, isPending } = useMutation({
     mutationFn: async (articleData: typeof formData) => {
@@ -90,6 +128,30 @@ const Admin = () => {
     }
   };
 
+  if (!session) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6">
+        <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
+        <Auth 
+          supabaseClient={supabase}
+          appearance={{ theme: ThemeSupa }}
+          theme="light"
+          providers={[]}
+        />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6">
+        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <p className="mb-4">You need admin privileges to access this page.</p>
+        <Button onClick={() => navigate("/")}>Return to Home</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -104,6 +166,12 @@ const Admin = () => {
               disabled={isFetching}
             >
               {isFetching ? "Fetching..." : "Fetch Related Articles"}
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => supabase.auth.signOut()}
+            >
+              Sign Out
             </Button>
           </div>
         </div>

@@ -9,12 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      article_likes: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          ip_address: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          ip_address: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_likes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           created_at: string | null
           date: string
           id: string
           language: string
+          likes_count: number | null
           source: string
           summary: string
           title: string
@@ -26,6 +56,7 @@ export type Database = {
           date?: string
           id?: string
           language?: string
+          likes_count?: number | null
           source: string
           summary: string
           title: string
@@ -37,6 +68,7 @@ export type Database = {
           date?: string
           id?: string
           language?: string
+          likes_count?: number | null
           source?: string
           summary?: string
           title?: string
@@ -44,6 +76,56 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_articles: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_articles_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
