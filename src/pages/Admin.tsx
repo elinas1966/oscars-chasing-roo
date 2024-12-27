@@ -26,10 +26,16 @@ const Admin = () => {
     url: "",
     language: "EN",
   });
+  const [isFetching, setIsFetching] = useState(false);
 
   const { mutate: addArticle, isPending } = useMutation({
     mutationFn: async (articleData: typeof formData) => {
-      const { error } = await supabase.from("articles").insert([articleData]);
+      const { error } = await supabase.from("articles").insert([
+        {
+          ...articleData,
+          date: new Date().toISOString().split('T')[0],
+        }
+      ]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -62,22 +68,25 @@ const Admin = () => {
 
   const handleFetchRelated = async () => {
     try {
-      const response = await fetch("/api/fetch-related-articles", {
-        method: "POST",
-      });
-      if (!response.ok) throw new Error("Failed to fetch related articles");
+      setIsFetching(true);
+      const { data, error } = await supabase.functions.invoke('fetch-related-articles');
       
+      if (error) throw error;
+
       toast({
         title: "Success",
-        description: "Related articles fetched successfully",
+        description: `Successfully fetched ${data.count} related articles`,
       });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
     } catch (error) {
+      console.error('Error fetching related articles:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch related articles",
+        description: "Failed to fetch related articles: " + error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -90,8 +99,11 @@ const Admin = () => {
             <Button variant="outline" onClick={() => navigate("/")}>
               View Site
             </Button>
-            <Button onClick={handleFetchRelated}>
-              Fetch Related Articles
+            <Button 
+              onClick={handleFetchRelated}
+              disabled={isFetching}
+            >
+              {isFetching ? "Fetching..." : "Fetch Related Articles"}
             </Button>
           </div>
         </div>

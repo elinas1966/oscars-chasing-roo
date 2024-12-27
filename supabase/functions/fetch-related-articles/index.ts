@@ -15,29 +15,30 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Example: Fetch news articles about your movie from a news API
-    // You would need to replace this with your preferred news API
+    console.log('Fetching articles from GNews...');
+    
+    // Fetch articles from GNews API
     const response = await fetch(
-      `https://api.example.com/news?q=your-movie-title`,
-      {
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('NEWS_API_KEY')}`,
-        },
-      }
+      `https://gnews.io/api/v4/search?q=movie&lang=en&country=us&max=10&apikey=${Deno.env.get('GNEWS_API_KEY')}`
     );
 
-    const newsData = await response.json();
+    if (!response.ok) {
+      throw new Error(`GNews API error: ${response.statusText}`);
+    }
 
-    // Process and insert articles
-    const articles = newsData.articles.map((article: any) => ({
+    const data = await response.json();
+    console.log(`Found ${data.articles?.length ?? 0} articles`);
+
+    // Transform and insert articles
+    const articles = data.articles.map((article: any) => ({
       title: article.title,
       summary: article.description,
       source: article.source.name,
       url: article.url,
-      language: 'EN', // You might want to detect language
+      language: 'EN',
       date: new Date(article.publishedAt).toISOString().split('T')[0],
     }));
 
@@ -46,16 +47,25 @@ serve(async (req) => {
       .from('articles')
       .insert(articles);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error inserting articles:', error);
+      throw error;
+    }
+
+    console.log('Articles successfully inserted into database');
 
     return new Response(
-      JSON.stringify({ message: 'Articles fetched and stored successfully' }),
+      JSON.stringify({ 
+        message: 'Articles fetched and stored successfully',
+        count: articles.length 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
   } catch (error) {
+    console.error('Error in fetch-related-articles:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
