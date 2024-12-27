@@ -32,8 +32,17 @@ serve(async (req) => {
       if (configError) throw configError;
       fetchConfigurations = configs;
     } else {
-      // For manual fetches, use the provided keywords
-      fetchConfigurations = [{ id: null, keywords }];
+      // For manual fetches, we need to get the configuration that was just created
+      const { data: config, error: configError } = await supabaseClient
+        .from('fetch_configurations')
+        .select('*')
+        .eq('keywords', keywords)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (configError) throw configError;
+      fetchConfigurations = [config];
     }
 
     let totalArticles = 0;
@@ -87,7 +96,7 @@ serve(async (req) => {
         date: new Date(article.publishedAt).toISOString().split('T')[0],
       }));
 
-      // Record fetch history before inserting articles
+      // Record fetch history
       const { error: historyError } = await supabaseClient
         .from('fetch_history')
         .insert({
