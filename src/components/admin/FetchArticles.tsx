@@ -5,12 +5,18 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const FetchArticles = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [keywords, setKeywords] = useState("");
   const [isFetching, setIsFetching] = useState(false);
+  const [fetchDetails, setFetchDetails] = useState<{
+    totalArticles?: number;
+    gnewsArticles?: number;
+    googleArticles?: number;
+  }>({});
 
   const { data: fetchConfigurations, isLoading: isLoadingConfigs } = useQuery({
     queryKey: ["fetchConfigurations"],
@@ -44,7 +50,6 @@ const FetchArticles = () => {
 
   const { mutate: saveFetchConfiguration } = useMutation({
     mutationFn: async (keywords: string) => {
-      // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error("No authenticated user");
@@ -59,10 +64,6 @@ const FetchArticles = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fetchConfigurations"] });
-      toast({
-        title: "Success",
-        description: "Fetch configuration saved successfully",
-      });
     },
     onError: (error) => {
       console.error('Error saving fetch configuration:', error);
@@ -77,6 +78,7 @@ const FetchArticles = () => {
   const handleFetchRelated = async () => {
     try {
       setIsFetching(true);
+      setFetchDetails({});
       await saveFetchConfiguration(keywords);
       
       const { data, error } = await supabase.functions.invoke('fetch-related-articles', {
@@ -85,10 +87,18 @@ const FetchArticles = () => {
       
       if (error) throw error;
 
+      // Parse the detailed fetch results
+      setFetchDetails({
+        totalArticles: data.count,
+        gnewsArticles: data.gnewsCount || 0,
+        googleArticles: data.googleCount || 0
+      });
+
       toast({
         title: "Success",
-        description: `Successfully fetched ${data.count} related articles`,
+        description: `Successfully fetched ${data.count} related articles (GNews: ${data.gnewsCount || 0}, Google: ${data.googleCount || 0})`,
       });
+      
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       queryClient.invalidateQueries({ queryKey: ["fetchHistory"] });
       setKeywords("");
@@ -121,6 +131,32 @@ const FetchArticles = () => {
             {isFetching ? "Fetching..." : "Fetch Articles"}
           </Button>
         </div>
+        
+        {/* Fetch Details */}
+        {isFetching ? (
+          <div className="mt-4 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ) : fetchDetails.totalArticles !== undefined ? (
+          <div className="mt-4 bg-secondary/10 p-3 rounded-md">
+            <p className="font-medium">Fetch Results:</p>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="bg-background p-2 rounded-md text-center">
+                <p className="text-sm text-muted-foreground">Total Articles</p>
+                <p className="font-bold">{fetchDetails.totalArticles}</p>
+              </div>
+              <div className="bg-background p-2 rounded-md text-center">
+                <p className="text-sm text-muted-foreground">GNews</p>
+                <p className="font-bold">{fetchDetails.gnewsArticles}</p>
+              </div>
+              <div className="bg-background p-2 rounded-md text-center">
+                <p className="text-sm text-muted-foreground">Google Search</p>
+                <p className="font-bold">{fetchDetails.googleArticles}</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </Card>
 
       <Card className="p-6">
