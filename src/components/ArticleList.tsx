@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 
@@ -147,7 +148,7 @@ export const ArticleList = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="article-card">
+              <Card key={i} className="article-card p-6">
                 <Skeleton className="h-4 w-20 mb-4" />
                 <Skeleton className="h-6 w-full mb-3" />
                 <Skeleton className="h-4 w-full mb-4" />
