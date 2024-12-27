@@ -38,11 +38,31 @@ serve(async (req) => {
 
     let totalArticles = 0;
     for (const config of fetchConfigurations) {
-      console.log(`Processing configuration with keywords: ${config.keywords}`);
+      // Clean and validate keywords
+      const cleanKeywords = config.keywords
+        .trim()
+        .replace(/[^\w\s]/g, '') // Remove special characters
+        .replace(/\s+/g, ' '); // Replace multiple spaces with single space
+
+      if (!cleanKeywords) {
+        console.error('Invalid keywords after cleaning:', config.keywords);
+        throw new Error('Invalid keywords provided');
+      }
+
+      console.log(`Processing configuration with cleaned keywords: ${cleanKeywords}`);
       
-      const response = await fetch(
-        `https://gnews.io/api/v4/search?q=${encodeURIComponent(config.keywords)}&lang=en&country=us&max=10&apikey=${Deno.env.get('GNEWS_API_KEY')}`
-      );
+      const queryParams = new URLSearchParams({
+        q: cleanKeywords,
+        lang: 'en',
+        country: 'us',
+        max: '10',
+        apikey: Deno.env.get('GNEWS_API_KEY') || '',
+      });
+
+      const apiUrl = `https://gnews.io/api/v4/search?${queryParams.toString()}`;
+      console.log('Calling GNews API with URL:', apiUrl);
+
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -51,7 +71,7 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      console.log(`Found ${data.articles?.length ?? 0} articles for keywords: ${config.keywords}`);
+      console.log(`Found ${data.articles?.length ?? 0} articles for keywords: ${cleanKeywords}`);
 
       if (!data.articles || !Array.isArray(data.articles)) {
         console.error('Invalid response from GNews:', data);
@@ -67,16 +87,7 @@ serve(async (req) => {
         date: new Date(article.publishedAt).toISOString().split('T')[0],
       }));
 
-      const { error: insertError } = await supabaseClient
-        .from('articles')
-        .insert(articles);
-
-      if (insertError) {
-        console.error('Error inserting articles:', insertError);
-        throw insertError;
-      }
-
-      // Record fetch history
+      // Record fetch history before inserting articles
       const { error: historyError } = await supabaseClient
         .from('fetch_history')
         .insert({
@@ -88,6 +99,16 @@ serve(async (req) => {
       if (historyError) {
         console.error('Error recording fetch history:', historyError);
         throw historyError;
+      }
+
+      // Insert articles
+      const { error: insertError } = await supabaseClient
+        .from('articles')
+        .insert(articles);
+
+      if (insertError) {
+        console.error('Error inserting articles:', insertError);
+        throw insertError;
       }
 
       totalArticles += articles.length;
