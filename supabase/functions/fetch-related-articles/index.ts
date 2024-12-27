@@ -27,7 +27,7 @@ serve(async (req) => {
         .from('fetch_configurations')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(3); // Get the 3 most recent configurations
+        .limit(3);
 
       if (configError) throw configError;
       fetchConfigurations = configs;
@@ -64,22 +64,23 @@ serve(async (req) => {
         q: cleanKeywords,
         lang: 'en',
         country: 'us',
-        max: '10',
+        max: '30', // Increased from 10 to get more articles
         apikey: Deno.env.get('GNEWS_API_KEY') || '',
       });
 
-      const apiUrl = `https://gnews.io/api/v4/search?${queryParams.toString()}`;
+      const apiUrl = `https://gnews.io/api/v4/search?${queryParams}`;
       console.log('Calling GNews API with URL:', apiUrl);
 
       const response = await fetch(apiUrl);
+      const responseText = await response.text();
+      console.log('GNews API response:', responseText);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('GNews API error:', errorText);
-        throw new Error(`GNews API error: ${response.statusText}. ${errorText}`);
+        console.error('GNews API error:', responseText);
+        throw new Error(`GNews API error: ${response.statusText}. ${responseText}`);
       }
 
-      const data = await response.json();
+      const data = JSON.parse(responseText);
       console.log(`Found ${data.articles?.length ?? 0} articles for keywords: ${cleanKeywords}`);
 
       if (!data.articles || !Array.isArray(data.articles)) {
@@ -111,13 +112,15 @@ serve(async (req) => {
       }
 
       // Insert articles
-      const { error: insertError } = await supabaseClient
-        .from('articles')
-        .insert(articles);
+      if (articles.length > 0) {
+        const { error: insertError } = await supabaseClient
+          .from('articles')
+          .insert(articles);
 
-      if (insertError) {
-        console.error('Error inserting articles:', insertError);
-        throw insertError;
+        if (insertError) {
+          console.error('Error inserting articles:', insertError);
+          throw insertError;
+        }
       }
 
       totalArticles += articles.length;

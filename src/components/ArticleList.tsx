@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Article {
   id: string;
@@ -17,7 +20,28 @@ interface Article {
 }
 
 export const ArticleList = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      setIsAdmin(data?.role === 'admin');
+    }
+  };
+
+  // Call checkAdminStatus when component mounts
+  useState(() => {
+    checkAdminStatus();
+  }, []);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["articles", selectedLanguage],
@@ -36,6 +60,32 @@ export const ArticleList = () => {
       }
       
       return data as Article[];
+    },
+  });
+
+  const deleteArticle = useMutation({
+    mutationFn: async (articleId: string) => {
+      const { error } = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', articleId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toast({
+        title: "Success",
+        description: "Article deleted successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting article:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete article",
+        variant: "destructive",
+      });
     },
   });
 
@@ -85,11 +135,23 @@ export const ArticleList = () => {
         <div className="grid gap-6 md:grid-cols-2">
           {articles && articles.length > 0 ? (
             articles.map((article) => (
-              <Card key={article.id} className="article-card">
+              <Card key={article.id} className="article-card p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <Badge variant="outline" className="text-primary border-primary">
-                    {article.language}
-                  </Badge>
+                  <div className="flex gap-2 items-center">
+                    <Badge variant="outline" className="text-primary border-primary">
+                      {article.language}
+                    </Badge>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteArticle.mutate(article.id)}
+                        className="text-destructive hover:text-destructive/80"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   <span className="text-sm text-gray-400">
                     {format(new Date(article.date), "MMM d, yyyy")}
                   </span>
