@@ -6,6 +6,7 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import ArticleForm from "@/components/admin/ArticleForm";
 import FetchArticles from "@/components/admin/FetchArticles";
+import { GoogleSearch } from "@/components/GoogleSearch";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -87,6 +88,7 @@ const Admin = () => {
           </div>
         </div>
 
+        <GoogleSearch />
         <FetchArticles />
         <ArticleForm />
       </div>

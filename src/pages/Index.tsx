@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Hero } from "@/components/Hero";
 import { ArticleList } from "@/components/ArticleList";
 import { Button } from "@/components/ui/button";
-import { GoogleSearch } from "@/components/GoogleSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -50,7 +49,6 @@ const Index = () => {
         )}
       </div>
       <Hero />
-      <GoogleSearch />
       <ArticleList />
     </main>
   );
