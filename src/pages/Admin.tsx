@@ -88,16 +88,6 @@ const Admin = () => {
           </div>
         </div>
 
-        <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary/50 backdrop-blur-sm">
-          <iframe
-            className="w-full h-full"
-            src="https://www.youtube.com/embed/videoseries?list=PLnQX-jgAF5pQWvWr9Ac3-P3cP5P7baxso"
-            title="Chasing Roo Video Series"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-
         <GoogleSearch />
         <FetchArticles />
         <ArticleForm />
