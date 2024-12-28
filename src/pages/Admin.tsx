@@ -91,7 +91,7 @@ const Admin = () => {
         <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary/50 backdrop-blur-sm">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/videoseries?list=PLnQX-jgAF5pTkwtUuVpqS5tuWmJ-6ZM-0"
+            src="https://www.youtube.com/embed/Ks0Rj2-W-q4"
             title="Chasing Roo Video Series"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
