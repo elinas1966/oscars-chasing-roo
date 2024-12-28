@@ -183,6 +183,30 @@ export type Database = {
           },
         ]
       }
+      videos: {
+        Row: {
+          content_type: string
+          created_at: string
+          file_path: string
+          id: string
+          title: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          file_path: string
+          id?: string
+          title: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          file_path?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

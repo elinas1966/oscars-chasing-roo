@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Hero } from "@/components/Hero";
+import { VideoSection } from "@/components/VideoSection";
 import { ArticleList } from "@/components/ArticleList";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,7 @@ const Index = () => {
         )}
       </div>
       <Hero />
+      <VideoSection />
       <ArticleList />
     </main>
   );
