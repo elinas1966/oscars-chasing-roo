@@ -43,9 +43,8 @@ export const VideoSection = () => {
 
   if (isLoading) {
     return (
-      <section className="max-w-4xl mx-auto px-4 py-12">
+      <section className="max-w-4xl mx-auto px-4 py-6">
         <div className="animate-pulse">
-          <div className="h-8 w-64 bg-primary/10 rounded mb-8 mx-auto"></div>
           <div className="aspect-video bg-primary/5 rounded-lg"></div>
         </div>
       </section>
@@ -53,10 +52,7 @@ export const VideoSection = () => {
   }
 
   return (
-    <section className="max-w-4xl mx-auto px-4 py-12">
-      <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4 text-center">
-        {video?.title || "Chasing Roo"}
-      </h2>
+    <section className="max-w-4xl mx-auto px-4 py-6">
       <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-lg shadow-primary/10">
         <video
           className="w-full h-full object-cover"
