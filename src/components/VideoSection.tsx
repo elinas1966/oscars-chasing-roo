@@ -10,7 +10,7 @@ interface Video {
 export const VideoSection = () => {
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const videoUrl = "https://intqojhpldgpqffwvuep.supabase.co/storage/v1/object/public/videos/Home%20%20ROO.mp4?t=2024-12-28T21%3A40%3A53.759Z";
+  const videoUrl = "https://intqojhpqldgpqffwvuep.supabase.co/storage/v1/object/public/videos/Home%20%20ROO.mp4?t=2024-12-28T21%3A40%3A53.759Z";
 
   useEffect(() => {
     const fetchLatestVideo = async () => {
@@ -43,7 +43,7 @@ export const VideoSection = () => {
 
   if (isLoading) {
     return (
-      <section className="max-w-4xl mx-auto px-4 py-6">
+      <section className="max-w-4xl mx-auto px-4 py-12">
         <div className="animate-pulse">
           <div className="aspect-video bg-primary/5 rounded-lg"></div>
         </div>
