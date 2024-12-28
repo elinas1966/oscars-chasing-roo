@@ -9,8 +9,8 @@ interface Video {
 
 export const VideoSection = () => {
   const [video, setVideo] = useState<Video | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const videoUrl = "https://intqojhpldgpqffwvuep.supabase.co/storage/v1/object/public/videos/Home%20%20ROO.mp4?t=2024-12-28T21%3A40%3A53.759Z";
 
   useEffect(() => {
     const fetchLatestVideo = async () => {
@@ -30,15 +30,6 @@ export const VideoSection = () => {
 
         if (data) {
           setVideo(data);
-          const { data: signedUrl, error: urlError } = await supabase.storage
-            .from('videos')
-            .createSignedUrl(data.file_path, 3600);
-          
-          if (urlError) {
-            console.error('Error getting signed URL:', urlError);
-          } else if (signedUrl) {
-            setVideoUrl(signedUrl.signedUrl);
-          }
         }
       } catch (err) {
         console.error('Unexpected error:', err);
@@ -61,21 +52,10 @@ export const VideoSection = () => {
     );
   }
 
-  if (!video || !videoUrl) {
-    return (
-      <section className="max-w-4xl mx-auto px-4 py-12">
-        <div className="text-center text-gray-400">
-          <h2 className="font-serif text-3xl md:text-4xl mb-4">No Videos Yet</h2>
-          <p>Check back soon for new content</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="max-w-4xl mx-auto px-4 py-12">
       <h2 className="font-serif text-3xl md:text-4xl text-primary mb-8 text-center">
-        {video.title}
+        {video?.title || "Chasing Roo"}
       </h2>
       <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-lg shadow-primary/10">
         <video
