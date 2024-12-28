@@ -148,7 +148,7 @@ export const ArticleList = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="article-card p-6">
+              <Card key={i} className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
                 <Skeleton className="h-4 w-20 mb-4" />
                 <Skeleton className="h-6 w-full mb-3" />
                 <Skeleton className="h-4 w-full mb-4" />
@@ -169,12 +169,12 @@ export const ArticleList = () => {
   return (
     <section className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="font-serif text-3xl text-primary">Latest Coverage</h2>
+        <div className="flex justify-between items-center mb-12">
+          <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
           <select 
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="bg-secondary text-white border border-gray-700 rounded-md px-4 py-2"
+            className="bg-secondary/50 backdrop-blur-sm text-white border border-primary/20 rounded-md px-4 py-2 focus:border-primary/50 transition-colors"
           >
             <option value="all">All Languages</option>
             <option value="EN">English</option>
@@ -183,13 +183,13 @@ export const ArticleList = () => {
           </select>
         </div>
         
-        <div className="space-y-12">
+        <div className="space-y-16">
           {Object.entries(groupedArticles).map(([source, sourceArticles]) => (
-            <div key={source} className="space-y-6">
-              <h3 className="text-2xl font-serif text-primary/80 border-b pb-2">
+            <div key={source} className="space-y-8">
+              <h3 className="text-3xl font-serif text-primary/90 border-b border-primary/20 pb-4">
                 {source}
               </h3>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-8 md:grid-cols-2">
                 {sourceArticles.map((article) => (
                   <ArticleCard
                     key={article.id}
