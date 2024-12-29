@@ -54,7 +54,7 @@ export const VideoSection = () => {
 
   return (
     <section className="max-w-4xl mx-auto px-4 py-12">
-      <h2 className="font-serif text-3xl md:text-4xl text-primary mb-8 text-center">
+      <h2 className="font-serif text-3xl md:text-4xl text-primary mb-6 text-center">
         {video?.title || "Chasing Roo"}
       </h2>
       <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-lg shadow-primary/10">
