@@ -25,9 +25,9 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="absolute top-4 right-4 z-50">
+      <header className="absolute top-4 right-4 z-50">
         {session ? (
-          <div className="flex gap-4">
+          <nav className="flex gap-4">
             <Button 
               variant="outline" 
               onClick={() => supabase.auth.signOut()}
@@ -40,7 +40,7 @@ const Index = () => {
             >
               Admin
             </Button>
-          </div>
+          </nav>
         ) : (
           <Button 
             variant="default"
@@ -49,7 +49,7 @@ const Index = () => {
             Sign In
           </Button>
         )}
-      </div>
+      </header>
       <Hero />
       <VideoSection />
       <ArticleList />

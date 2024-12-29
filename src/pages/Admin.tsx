@@ -48,7 +48,7 @@ const Admin = () => {
 
   if (!session) {
     return (
-      <div className="max-w-md mx-auto mt-10 p-6">
+      <main className="max-w-md mx-auto mt-10 p-6">
         <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
         <Auth 
           supabaseClient={supabase}
@@ -56,26 +56,26 @@ const Admin = () => {
           theme="light"
           providers={[]}
         />
-      </div>
+      </main>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="max-w-md mx-auto mt-10 p-6">
+      <main className="max-w-md mx-auto mt-10 p-6">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
         <p className="mb-4">You need admin privileges to access this page.</p>
         <Button onClick={() => navigate("/")}>Return to Home</Button>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+        <header className="flex justify-between items-center">
           <h1 className="text-3xl font-serif text-primary">Admin Dashboard</h1>
-          <div className="space-x-4">
+          <nav className="space-x-4">
             <Button variant="outline" onClick={() => navigate("/")}>
               View Site
             </Button>
@@ -85,14 +85,22 @@ const Admin = () => {
             >
               Sign Out
             </Button>
-          </div>
-        </div>
+          </nav>
+        </header>
 
-        <GoogleSearch />
-        <FetchArticles />
-        <ArticleForm />
+        <section aria-label="Search Tools">
+          <GoogleSearch />
+        </section>
+
+        <section aria-label="Article Management">
+          <FetchArticles />
+        </section>
+
+        <section aria-label="New Article Form">
+          <ArticleForm />
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 
