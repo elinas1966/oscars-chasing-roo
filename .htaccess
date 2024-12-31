@@ -2,49 +2,51 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
+  
+  # Don't rewrite files or directories
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_FILENAME} !-l
+  
+  # Rewrite everything else to index.html
   RewriteRule . /index.html [L]
 </IfModule>
 
 # Set correct MIME types
 <IfModule mod_mime.c>
+    # JavaScript module MIME types
     AddType application/javascript .js
     AddType application/javascript .mjs
     AddType application/javascript .jsx
     AddType application/javascript .ts
     AddType application/javascript .tsx
+    
+    # CSS MIME type
     AddType text/css .css
-    
-    # Ensure JavaScript modules are served with correct MIME type
-    AddHandler application/javascript .js
-    AddHandler application/javascript .mjs
-    AddHandler application/javascript .jsx
-    AddHandler application/javascript .ts
-    AddHandler application/javascript .tsx
-    
-    # Force JavaScript MIME type
-    ForceType application/javascript
 </IfModule>
 
-# Enable CORS
+# Enable CORS and set content types
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
     Header set X-Content-Type-Options "nosniff"
     
-    # Force JavaScript MIME type for specific extensions
+    # Force JavaScript MIME types for module files
     <FilesMatch "\.(js|mjs|jsx|ts|tsx)$">
         Header set Content-Type "application/javascript"
+        Header set Cache-Control "max-age=31536000"
+    </FilesMatch>
+    
+    # Force CSS MIME type
+    <FilesMatch "\.css$">
+        Header set Content-Type "text/css"
+        Header set Cache-Control "max-age=31536000"
     </FilesMatch>
 </IfModule>
 
-# Cache static assets
+# Cache settings
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/css "access plus 1 year"
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
