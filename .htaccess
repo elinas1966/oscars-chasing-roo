@@ -17,8 +17,14 @@
 <IfModule mod_mime.c>
     AddType application/javascript .js
     AddType application/javascript .mjs
+    AddType application/javascript .jsx
+    AddType application/javascript .ts
+    AddType application/javascript .tsx
     AddType text/javascript .js
     AddType text/javascript .mjs
+    AddType text/javascript .jsx
+    AddType text/javascript .ts
+    AddType text/javascript .tsx
 </IfModule>
 
 # Cache static assets
@@ -31,4 +37,5 @@
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
 </IfModule>
