@@ -21,14 +21,15 @@ esbuild.build({
     '.jsx': 'jsx',
     '.js': 'jsx',
   },
-  format: 'esm', // Changed to ESM format for module support
+  format: 'esm',
   platform: 'browser',
   target: ['es2020'],
   minify: true,
   sourcemap: true,
   define: {
-    'process.env.NODE_ENV': '"production"'
+    'process.env.NODE_ENV': '"development"'
   },
+  publicPath: './dist',
 }).catch(() => process.exit(1));
 
 // Process CSS with PostCSS and Tailwind
@@ -37,7 +38,10 @@ postcss([
   tailwindcss,
   autoprefixer,
 ])
-  .process(css, { from: 'src/index.css', to: 'dist/output.css' })
+  .process(css, { 
+    from: 'src/index.css', 
+    to: 'dist/output.css'
+  })
   .then(result => {
     fs.writeFileSync('dist/output.css', result.css);
   });

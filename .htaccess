@@ -20,7 +20,6 @@
 # Enable CORS and set content types
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
-    Header set X-Content-Type-Options "nosniff"
     
     # Force JavaScript MIME type
     <FilesMatch "\.js$">
@@ -36,9 +35,6 @@
 # Cache settings
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType application/javascript "access plus 1 year"
-    ExpiresByType text/css "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
 </IfModule>
