@@ -10,13 +10,19 @@ export interface Article {
   language: string;
 }
 
+const normalizeSource = (source: string): string => {
+  // Remove 'www.' prefix if it exists
+  return source.replace(/^www\./i, '');
+};
+
 export const groupArticlesBySourceAndDate = (articles: Article[]) => {
-  // First group by source
+  // First group by normalized source
   const groupedBySource = articles.reduce((acc, article) => {
-    if (!acc[article.source]) {
-      acc[article.source] = [];
+    const normalizedSource = normalizeSource(article.source);
+    if (!acc[normalizedSource]) {
+      acc[normalizedSource] = [];
     }
-    acc[article.source].push(article);
+    acc[normalizedSource].push(article);
     return acc;
   }, {} as Record<string, Article[]>);
 
