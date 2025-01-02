@@ -21,11 +21,14 @@ esbuild.build({
     '.jsx': 'jsx',
     '.js': 'jsx',
   },
-  format: 'iife',
+  format: 'esm', // Changed to ESM format for module support
   platform: 'browser',
   target: ['es2020'],
   minify: true,
   sourcemap: true,
+  define: {
+    'process.env.NODE_ENV': '"production"'
+  },
 }).catch(() => process.exit(1));
 
 // Process CSS with PostCSS and Tailwind
