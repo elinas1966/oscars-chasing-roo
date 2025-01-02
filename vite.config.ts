@@ -7,15 +7,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
   },
   build: {
     outDir: 'dist',
     assetsDir: '',
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-      },
-    },
+    sourcemap: true,
   },
   plugins: [
     react(),
