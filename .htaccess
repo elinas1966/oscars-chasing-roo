@@ -13,19 +13,8 @@
 
 # Set correct MIME types
 <IfModule mod_mime.c>
-    # JavaScript module MIME types
     AddType application/javascript .js
-    AddType application/javascript .mjs
-    AddType application/javascript .jsx
-    AddType application/javascript .ts
-    AddType application/javascript .tsx
-    
-    # CSS MIME type
     AddType text/css .css
-
-    # Remove default handlers
-    RemoveHandler .js .mjs .jsx .ts .tsx
-    RemoveType .js .mjs .jsx .ts .tsx
 </IfModule>
 
 # Enable CORS and set content types
@@ -33,18 +22,14 @@
     Header set Access-Control-Allow-Origin "*"
     Header set X-Content-Type-Options "nosniff"
     
-    # Force JavaScript MIME types for module files
-    <FilesMatch "\.(js|mjs|jsx|ts|tsx)$">
+    # Force JavaScript MIME type
+    <FilesMatch "\.js$">
         Header set Content-Type "application/javascript"
-        Header unset Content-Type
-        Header append Content-Type "application/javascript"
-        Header set Cache-Control "max-age=31536000"
     </FilesMatch>
     
     # Force CSS MIME type
     <FilesMatch "\.css$">
         Header set Content-Type "text/css"
-        Header set Cache-Control "max-age=31536000"
     </FilesMatch>
 </IfModule>
 
