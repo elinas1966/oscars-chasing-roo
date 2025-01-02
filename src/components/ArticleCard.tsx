@@ -32,8 +32,8 @@ export const ArticleCard = ({
 }: ArticleCardProps) => {
   if (isEditing) {
     return (
-      <Card className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
-        <div className="space-y-4">
+      <Card className="bg-secondary/50 backdrop-blur-sm p-4 rounded-lg border border-primary/10">
+        <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
             <Input
@@ -46,6 +46,7 @@ export const ArticleCard = ({
             <Textarea
               value={editForm?.summary}
               onChange={(e) => onEditFormChange?.('summary', e.target.value)}
+              className="h-24"
             />
           </div>
           <div>
@@ -67,20 +68,20 @@ export const ArticleCard = ({
             <select
               value={editForm?.language}
               onChange={(e) => onEditFormChange?.('language', e.target.value)}
-              className="w-full border border-input bg-background px-3 py-2 text-sm rounded-md"
+              className="w-full border border-input bg-background px-3 py-1.5 text-sm rounded-md"
             >
               <option value="EN">English</option>
               <option value="ES">Spanish</option>
               <option value="FR">French</option>
             </select>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={onCancelEdit}>
-              <X className="h-4 w-4 mr-1" />
+              <X className="h-3 w-3 mr-1" />
               Cancel
             </Button>
             <Button variant="default" size="sm" onClick={() => onSaveEdit(article.id)}>
-              <Check className="h-4 w-4 mr-1" />
+              <Check className="h-3 w-3 mr-1" />
               Save
             </Button>
           </div>
@@ -90,52 +91,52 @@ export const ArticleCard = ({
   }
 
   return (
-    <Card className="group bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-all duration-300">
-      <div className="flex justify-between items-start mb-4">
+    <Card className="group bg-secondary/50 backdrop-blur-sm p-4 rounded-lg border border-primary/10 hover:border-primary/30 transition-all duration-300">
+      <div className="flex justify-between items-start mb-3">
         <div className="flex gap-2 items-center">
-          <Badge variant="outline" className="text-primary border-primary">
+          <Badge variant="outline" className="text-primary border-primary text-xs">
             {article.language}
           </Badge>
           {isAdmin && (
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(article)}
-                className="text-primary hover:text-primary/80"
+                className="h-6 w-6 text-primary hover:text-primary/80"
               >
-                <Edit2 className="h-4 w-4" />
+                <Edit2 className="h-3 w-3" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(article.id)}
-                className="text-destructive hover:text-destructive/80"
+                className="h-6 w-6 text-destructive hover:text-destructive/80"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           )}
         </div>
-        <span className="text-sm text-gray-400 font-medium">
+        <span className="text-xs text-gray-400 font-medium">
           {formatDate(article.date)}
         </span>
       </div>
-      <h3 className="text-xl font-serif mb-3 text-white hover:text-primary transition-colors">
+      <h3 className="text-lg font-serif mb-2 text-white hover:text-primary transition-colors line-clamp-2">
         <a href={article.url} target="_blank" rel="noopener noreferrer">
           {article.title}
         </a>
       </h3>
-      <p className="text-gray-400 mb-4 line-clamp-3">{article.summary}</p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-primary/80">{article.source}</span>
+      <p className="text-sm text-gray-400 mb-3 line-clamp-2">{article.summary}</p>
+      <div className="flex justify-between items-center text-xs">
+        <span className="text-primary/80">{article.source}</span>
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+          className="text-primary hover:text-primary/80 transition-colors font-medium"
         >
-          Read Full Article →
+          Read More →
         </a>
       </div>
     </Card>

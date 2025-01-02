@@ -140,18 +140,18 @@ export const ArticleList = () => {
 
   if (isLoading) {
     return (
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+      <section className="py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-10 w-32" />
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
-                <Skeleton className="h-4 w-20 mb-4" />
-                <Skeleton className="h-6 w-full mb-3" />
-                <Skeleton className="h-4 w-full mb-4" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Card key={i} className="bg-secondary/50 backdrop-blur-sm p-4 rounded-lg border border-primary/10">
+                <Skeleton className="h-4 w-20 mb-3" />
+                <Skeleton className="h-6 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-3" />
                 <div className="flex justify-between items-center">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-20" />
@@ -167,14 +167,14 @@ export const ArticleList = () => {
   const groupedArticles = articles ? groupArticlesBySourceAndDate(articles) : {};
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-12">
-          <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+    <section className="py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="font-serif text-3xl text-primary">Latest Coverage</h2>
           <select 
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="bg-secondary/50 backdrop-blur-sm text-white border border-primary/20 rounded-md px-4 py-2 focus:border-primary/50 transition-colors"
+            className="bg-secondary/50 backdrop-blur-sm text-white border border-primary/20 rounded-md px-3 py-1.5 focus:border-primary/50 transition-colors text-sm"
           >
             <option value="all">All Languages</option>
             <option value="EN">English</option>
@@ -183,13 +183,13 @@ export const ArticleList = () => {
           </select>
         </div>
         
-        <div className="space-y-16">
+        <div className="space-y-12">
           {Object.entries(groupedArticles).map(([source, sourceArticles]) => (
-            <div key={source} className="space-y-8">
-              <h3 className="text-3xl font-serif text-primary/90 border-b border-primary/20 pb-4">
+            <div key={source} className="space-y-6">
+              <h3 className="text-2xl font-serif text-primary/90 border-b border-primary/20 pb-3">
                 {source}
               </h3>
-              <div className="grid gap-8 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {sourceArticles.map((article) => (
                   <ArticleCard
                     key={article.id}
