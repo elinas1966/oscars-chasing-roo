@@ -19,5 +19,8 @@
 
 # Enable CORS
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Origin "https://oscarschasingroo.com"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "*"
+    Header set Access-Control-Allow-Credentials "true"
 </IfModule>
