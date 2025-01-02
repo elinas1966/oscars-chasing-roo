@@ -17,24 +17,7 @@
     AddType text/css .css
 </IfModule>
 
-# Enable CORS and set content types
+# Enable CORS
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
-    
-    # Force JavaScript MIME type
-    <FilesMatch "\.js$">
-        Header set Content-Type "application/javascript"
-    </FilesMatch>
-    
-    # Force CSS MIME type
-    <FilesMatch "\.css$">
-        Header set Content-Type "text/css"
-    </FilesMatch>
-</IfModule>
-
-# Cache settings
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType text/css "access plus 1 month"
 </IfModule>
