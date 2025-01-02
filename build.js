@@ -29,7 +29,6 @@ esbuild.build({
   define: {
     'process.env.NODE_ENV': '"development"'
   },
-  publicPath: './dist',
 }).catch(() => process.exit(1));
 
 // Process CSS with PostCSS and Tailwind
