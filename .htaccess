@@ -8,13 +8,16 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   
   # Rewrite everything else to index.html
-  RewriteRule . /index.html [L]
+  RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
 # Set correct MIME types
 <IfModule mod_mime.c>
     AddType application/javascript .js
+    AddType text/javascript .mjs
     AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType application/json .json
 </IfModule>
 
 # Enable CORS
@@ -23,4 +26,18 @@
     Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
     Header set Access-Control-Allow-Headers "*"
     Header set Access-Control-Allow-Credentials "true"
+    
+    # Ensure JavaScript modules are served with correct MIME type
+    <FilesMatch "\.js$">
+        Header set Content-Type "application/javascript"
+    </FilesMatch>
+</IfModule>
+
+# Caching Headers
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
 </IfModule>
