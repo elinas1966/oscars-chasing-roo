@@ -5,44 +5,23 @@ import { ArticleList } from "@/components/ArticleList";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Session } from "@supabase/supabase-js";
+import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
 
 const Index = () => {
-  const [session, setSession] = useState<Session | null>(null);
+  const session = useSession();
+  const supabase = useSupabaseClient();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
-      
-      // Handle session errors
-      if (_event === 'SIGNED_OUT' || _event === 'TOKEN_REFRESHED') {
-        setSession(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    setLoading(false);
+  }, [session]);
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      setSession(null);
-      navigate("/admin"); // Redirect to admin page after sign out
+      navigate("/admin");
     } catch (error) {
       console.error("Error signing out:", error);
     }
