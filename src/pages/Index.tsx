@@ -4,6 +4,7 @@ import { VideoSection } from "@/components/VideoSection";
 import { ArticleList } from "@/components/ArticleList";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -42,12 +43,19 @@ const Index = () => {
             </Button>
           </nav>
         ) : (
-          <Button 
-            variant="default"
-            onClick={() => navigate("/admin")}
-          >
-            Sign In
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Alert variant="default" className="bg-primary/10 border-primary/20 max-w-xs">
+              <AlertDescription className="text-primary">
+                This site can only be used by invitation only
+              </AlertDescription>
+            </Alert>
+            <Button 
+              variant="default"
+              onClick={() => navigate("/admin")}
+            >
+              Sign In
+            </Button>
+          </div>
         )}
       </header>
       <Hero />
