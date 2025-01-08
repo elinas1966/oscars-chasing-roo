@@ -7,6 +7,9 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   
+  # Handle static assets in the assets directory
+  RewriteCond %{REQUEST_URI} !^/assets/
+  
   # Rewrite everything else to index.html
   RewriteRule ^(.*)$ index.html [L]
 </IfModule>
@@ -28,16 +31,28 @@
     Header set Access-Control-Allow-Credentials "true"
     
     # Ensure JavaScript modules are served with correct MIME type
-    <FilesMatch "\.js$">
+    <FilesMatch "\.(js|mjs)$">
         Header set Content-Type "application/javascript"
+    </FilesMatch>
+    
+    # Prevent caching for index.html
+    <FilesMatch "index\.html$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
     </FilesMatch>
 </IfModule>
 
-# Caching Headers
+# Caching Headers for static assets
 <IfModule mod_expires.c>
     ExpiresActive On
+    
+    # Cache static assets for 1 year
     ExpiresByType text/css "access plus 1 year"
     ExpiresByType application/javascript "access plus 1 year"
     ExpiresByType text/javascript "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # Set default expiration
+    ExpiresDefault "access plus 1 month"
 </IfModule>
