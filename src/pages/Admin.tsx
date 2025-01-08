@@ -60,7 +60,9 @@ const Admin = () => {
   };
 
   const handleAuthError = (error: AuthError) => {
-    if (error.message.includes("weak_password")) {
+    if (error.message.includes("email_provider_disabled")) {
+      setAuthError("Email authentication is currently disabled. Please contact the administrator.");
+    } else if (error.message.includes("weak_password")) {
       setAuthError("Password must be at least 6 characters long.");
     } else if (error.message.includes("invalid_credentials")) {
       setAuthError("Invalid email or password.");
