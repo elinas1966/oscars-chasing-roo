@@ -44,17 +44,17 @@ const Index = () => {
           </nav>
         ) : (
           <div className="flex flex-col items-end gap-2">
-            <Alert variant="default" className="bg-primary/10 border-primary/20 max-w-xs">
-              <AlertDescription className="text-primary">
-                This site can only be used by invitation only
-              </AlertDescription>
-            </Alert>
             <Button 
               variant="default"
               onClick={() => navigate("/admin")}
             >
               Sign In
             </Button>
+            <Alert variant="default" className="bg-primary/10 border-primary/20 max-w-xs">
+              <AlertDescription className="text-primary text-xs">
+                This site can only be used by invitation only
+              </AlertDescription>
+            </Alert>
           </div>
         )}
       </header>
