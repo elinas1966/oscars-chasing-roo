@@ -24,14 +24,20 @@ const Admin = () => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session?.user?.id) {
         checkAdminStatus(session.user.id);
       }
-      // Clear error when auth state changes
+      // Handle auth errors and clear them on sign out
       if (event === 'SIGNED_OUT') {
         setAuthError("");
+      }
+      if (event === 'USER_UPDATED') {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          handleAuthError(error);
+        }
       }
     });
 
@@ -77,7 +83,6 @@ const Admin = () => {
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={[]}
-          onError={handleAuthError}
         />
       </main>
     );
