@@ -80,7 +80,22 @@ const Admin = () => {
         )}
         <Auth 
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: 'rgb(var(--primary))',
+                  brandAccent: 'rgb(var(--primary))',
+                }
+              }
+            },
+            className: {
+              anchor: 'hidden',
+              container: 'auth-container',
+              divider: 'hidden',
+            },
+          }}
           theme="light"
           providers={[]}
         />
