@@ -7,11 +7,14 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import ArticleForm from "@/components/admin/ArticleForm";
 import FetchArticles from "@/components/admin/FetchArticles";
 import { GoogleSearch } from "@/components/GoogleSearch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authError, setAuthError] = useState<string>("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,10 +24,14 @@ const Admin = () => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session?.user?.id) {
         checkAdminStatus(session.user.id);
+      }
+      // Clear error when auth state changes
+      if (event === 'SIGNED_OUT') {
+        setAuthError("");
       }
     });
 
@@ -46,15 +53,31 @@ const Admin = () => {
     setIsAdmin(data.role === 'admin');
   };
 
+  const handleAuthError = (error: AuthError) => {
+    if (error.message.includes("weak_password")) {
+      setAuthError("Password must be at least 6 characters long.");
+    } else if (error.message.includes("invalid_credentials")) {
+      setAuthError("Invalid email or password.");
+    } else {
+      setAuthError(error.message);
+    }
+  };
+
   if (!session) {
     return (
       <main className="max-w-md mx-auto mt-10 p-6">
         <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
+        {authError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
         <Auth 
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={[]}
+          onError={handleAuthError}
         />
       </main>
     );
