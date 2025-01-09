@@ -1,5 +1,4 @@
-import { Article } from "@/utils/articleUtils";
-import { formatDate } from "@/utils/articleUtils";
+import { Article, formatDate } from "@/utils/articleUtils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,8 @@ import {
   Facebook,
   Linkedin,
   Mail,
-  Copy
+  Copy,
+  Video
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,10 +53,64 @@ export const ArticleCard = ({
   const handleShare = async (platform: string) => {
     const shareUrl = article.url;
     const shareText = `Check out this article: ${article.title}`;
+    const videoElement = document.querySelector('video') as HTMLVideoElement;
     
     let shareLink = '';
     
     switch (platform) {
+      case 'video':
+        if (videoElement) {
+          try {
+            // Create a 10-second video clip
+            const startTime = Math.max(0, videoElement.currentTime - 5); // Start 5 seconds before current time
+            const endTime = startTime + 10; // 10 seconds duration
+            
+            const mediaRecorder = new MediaRecorder(videoElement.captureStream());
+            const chunks: BlobPart[] = [];
+            
+            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+              const blob = new Blob(chunks, { type: 'video/webm' });
+              const url = URL.createObjectURL(blob);
+              
+              // Create a temporary download link
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'video-clip.webm';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              
+              toast({
+                title: "Video clip created!",
+                description: "The video clip has been downloaded to your device.",
+              });
+            };
+            
+            videoElement.currentTime = startTime;
+            mediaRecorder.start();
+            
+            setTimeout(() => {
+              mediaRecorder.stop();
+            }, 10000); // Stop after 10 seconds
+            
+          } catch (err) {
+            console.error('Failed to create video clip:', err);
+            toast({
+              title: "Error",
+              description: "Failed to create video clip. Please try again.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "No video found on the page.",
+            variant: "destructive",
+          });
+        }
+        return;
       case 'twitter':
         shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
         break;
@@ -188,6 +242,9 @@ export const ArticleCard = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-secondary/95 backdrop-blur-sm border-primary/10">
+              <DropdownMenuItem onClick={() => handleShare('video')} className="gap-2 cursor-pointer">
+                <Video className="h-4 w-4" /> Share Video Clip
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleShare('twitter')} className="gap-2 cursor-pointer">
                 <Twitter className="h-4 w-4" /> Share on X
               </DropdownMenuItem>
