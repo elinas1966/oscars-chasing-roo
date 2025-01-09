@@ -1,29 +1,9 @@
 import { Article, formatDate } from "@/utils/articleUtils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Trash2, 
-  Edit2, 
-  X, 
-  Check, 
-  Share2,
-  Twitter,
-  Facebook,
-  Linkedin,
-  Mail,
-  Copy,
-  Video
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/components/ui/use-toast";
+import { ShareMenu } from "./article/ShareMenu";
+import { EditForm } from "./article/EditForm";
+import { AdminControls } from "./article/AdminControls";
 
 interface ArticleCardProps {
   article: Article;
@@ -48,161 +28,15 @@ export const ArticleCard = ({
   onSaveEdit,
   onEditFormChange,
 }: ArticleCardProps) => {
-  const { toast } = useToast();
-
-  const handleShare = async (platform: string) => {
-    const shareUrl = article.url;
-    const shareText = `Check out this article: ${article.title}`;
-    const videoElement = document.querySelector('video') as HTMLVideoElement;
-    
-    let shareLink = '';
-    
-    switch (platform) {
-      case 'video':
-        if (videoElement) {
-          try {
-            // Create a 10-second video clip
-            const startTime = Math.max(0, videoElement.currentTime - 5); // Start 5 seconds before current time
-            const endTime = startTime + 10; // 10 seconds duration
-            
-            const mediaRecorder = new MediaRecorder(videoElement.captureStream());
-            const chunks: BlobPart[] = [];
-            
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-              const blob = new Blob(chunks, { type: 'video/webm' });
-              const url = URL.createObjectURL(blob);
-              
-              // Create a temporary download link
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'video-clip.webm';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-              
-              toast({
-                title: "Video clip created!",
-                description: "The video clip has been downloaded to your device.",
-              });
-            };
-            
-            videoElement.currentTime = startTime;
-            mediaRecorder.start();
-            
-            setTimeout(() => {
-              mediaRecorder.stop();
-            }, 10000); // Stop after 10 seconds
-            
-          } catch (err) {
-            console.error('Failed to create video clip:', err);
-            toast({
-              title: "Error",
-              description: "Failed to create video clip. Please try again.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          toast({
-            title: "Error",
-            description: "No video found on the page.",
-            variant: "destructive",
-          });
-        }
-        return;
-      case 'twitter':
-        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-        break;
-      case 'facebook':
-        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-        break;
-      case 'linkedin':
-        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-        break;
-      case 'email':
-        shareLink = `mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;
-        break;
-      case 'copy':
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied!",
-            description: "The article link has been copied to your clipboard.",
-          });
-          return;
-        } catch (err) {
-          console.error('Failed to copy:', err);
-          toast({
-            title: "Copy failed",
-            description: "Failed to copy the link to clipboard.",
-            variant: "destructive",
-          });
-          return;
-        }
-    }
-    
-    if (shareLink) {
-      window.open(shareLink, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  if (isEditing) {
+  if (isEditing && editForm && onEditFormChange) {
     return (
-      <Card className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <Input
-              value={editForm?.title}
-              onChange={(e) => onEditFormChange?.('title', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Summary</label>
-            <Textarea
-              value={editForm?.summary}
-              onChange={(e) => onEditFormChange?.('summary', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Source</label>
-            <Input
-              value={editForm?.source}
-              onChange={(e) => onEditFormChange?.('source', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">URL</label>
-            <Input
-              value={editForm?.url}
-              onChange={(e) => onEditFormChange?.('url', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Language</label>
-            <select
-              value={editForm?.language}
-              onChange={(e) => onEditFormChange?.('language', e.target.value)}
-              className="w-full border border-input bg-background px-3 py-2 text-sm rounded-md"
-            >
-              <option value="EN">English</option>
-              <option value="ES">Spanish</option>
-              <option value="FR">French</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={onCancelEdit}>
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
-            <Button variant="default" size="sm" onClick={() => onSaveEdit(article.id)}>
-              <Check className="h-4 w-4 mr-1" />
-              Save
-            </Button>
-          </div>
-        </div>
-      </Card>
+      <EditForm
+        article={article}
+        editForm={editForm}
+        onEditFormChange={onEditFormChange}
+        onCancelEdit={onCancelEdit}
+        onSaveEdit={onSaveEdit}
+      />
     );
   }
 
@@ -214,54 +48,18 @@ export const ArticleCard = ({
             {article.language}
           </Badge>
           {isAdmin && (
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(article)}
-                className="text-primary hover:text-primary/80"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(article.id)}
-                className="text-destructive hover:text-destructive/80"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <AdminControls
+              article={article}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80">
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-secondary/95 backdrop-blur-sm border-primary/10">
-              <DropdownMenuItem onClick={() => handleShare('video')} className="gap-2 cursor-pointer">
-                <Video className="h-4 w-4" /> Share Video Clip
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare('twitter')} className="gap-2 cursor-pointer">
-                <Twitter className="h-4 w-4" /> Share on X
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare('facebook')} className="gap-2 cursor-pointer">
-                <Facebook className="h-4 w-4" /> Share on Facebook
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare('linkedin')} className="gap-2 cursor-pointer">
-                <Linkedin className="h-4 w-4" /> Share on LinkedIn
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare('email')} className="gap-2 cursor-pointer">
-                <Mail className="h-4 w-4" /> Share via Email
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare('copy')} className="gap-2 cursor-pointer">
-                <Copy className="h-4 w-4" /> Copy Link
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ShareMenu
+            articleTitle={article.title}
+            articleUrl={article.url}
+          />
           <span className="text-sm text-gray-400 font-medium">
             {formatDate(article.date)}
           </span>
