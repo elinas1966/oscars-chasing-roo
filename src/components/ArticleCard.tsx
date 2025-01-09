@@ -3,9 +3,27 @@ import { formatDate } from "@/utils/articleUtils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit2, X, Check } from "lucide-react";
+import { 
+  Trash2, 
+  Edit2, 
+  X, 
+  Check, 
+  Share2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Mail,
+  Copy
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ArticleCardProps {
   article: Article;
@@ -30,6 +48,51 @@ export const ArticleCard = ({
   onSaveEdit,
   onEditFormChange,
 }: ArticleCardProps) => {
+  const { toast } = useToast();
+
+  const handleShare = async (platform: string) => {
+    const shareUrl = article.url;
+    const shareText = `Check out this article: ${article.title}`;
+    
+    let shareLink = '';
+    
+    switch (platform) {
+      case 'twitter':
+        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'facebook':
+        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'linkedin':
+        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'email':
+        shareLink = `mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;
+        break;
+      case 'copy':
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied!",
+            description: "The article link has been copied to your clipboard.",
+          });
+          return;
+        } catch (err) {
+          console.error('Failed to copy:', err);
+          toast({
+            title: "Copy failed",
+            description: "Failed to copy the link to clipboard.",
+            variant: "destructive",
+          });
+          return;
+        }
+    }
+    
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (isEditing) {
     return (
       <Card className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
@@ -117,9 +180,35 @@ export const ArticleCard = ({
             </div>
           )}
         </div>
-        <span className="text-sm text-gray-400 font-medium">
-          {formatDate(article.date)}
-        </span>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-secondary/95 backdrop-blur-sm border-primary/10">
+              <DropdownMenuItem onClick={() => handleShare('twitter')} className="gap-2 cursor-pointer">
+                <Twitter className="h-4 w-4" /> Share on X
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare('facebook')} className="gap-2 cursor-pointer">
+                <Facebook className="h-4 w-4" /> Share on Facebook
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare('linkedin')} className="gap-2 cursor-pointer">
+                <Linkedin className="h-4 w-4" /> Share on LinkedIn
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare('email')} className="gap-2 cursor-pointer">
+                <Mail className="h-4 w-4" /> Share via Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare('copy')} className="gap-2 cursor-pointer">
+                <Copy className="h-4 w-4" /> Copy Link
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <span className="text-sm text-gray-400 font-medium">
+            {formatDate(article.date)}
+          </span>
+        </div>
       </div>
       <h3 className="text-xl font-serif mb-3 text-white hover:text-primary transition-colors">
         <a href={article.url} target="_blank" rel="noopener noreferrer">
