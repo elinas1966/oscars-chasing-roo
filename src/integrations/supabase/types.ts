@@ -183,6 +183,44 @@ export type Database = {
           },
         ]
       }
+      video_clips: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          duration: number
+          file_path: string
+          id: string
+          start_time: number
+          title: string
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          duration: number
+          file_path: string
+          id?: string
+          start_time: number
+          title: string
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          duration?: number
+          file_path?: string
+          id?: string
+          start_time?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_clips_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           content_type: string

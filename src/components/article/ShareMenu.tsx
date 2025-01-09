@@ -15,6 +15,7 @@ import {
   Video
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareMenuProps {
   articleTitle: string;
@@ -36,26 +37,49 @@ export const ShareMenu = ({ articleTitle, articleUrl }: ShareMenuProps) => {
         if (videoElement) {
           try {
             const startTime = Math.max(0, videoElement.currentTime - 5);
+            const duration = 10;
             const mediaRecorder = new MediaRecorder(videoElement.captureStream());
             const chunks: BlobPart[] = [];
             
             mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
             mediaRecorder.onstop = async () => {
               const blob = new Blob(chunks, { type: 'video/webm' });
-              const url = URL.createObjectURL(blob);
               
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'video-clip.webm';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-              
-              toast({
-                title: "Video clip created!",
-                description: "The video clip has been downloaded to your device.",
-              });
+              // Convert blob to base64
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = async () => {
+                const base64data = reader.result;
+                
+                try {
+                  const { data, error } = await supabase.functions.invoke('create-video-clip', {
+                    body: {
+                      videoBlob: base64data,
+                      title: `Clip from ${articleTitle}`,
+                      articleId: null, // You might want to pass the actual article ID here
+                      startTime,
+                      duration
+                    },
+                  });
+
+                  if (error) throw error;
+
+                  toast({
+                    title: "Video clip created!",
+                    description: "The video clip has been saved and is ready to share.",
+                  });
+
+                  // Open the video clip in a new tab
+                  window.open(data.url, '_blank');
+                } catch (err) {
+                  console.error('Failed to create video clip:', err);
+                  toast({
+                    title: "Error",
+                    description: "Failed to create video clip. Please try again.",
+                    variant: "destructive",
+                  });
+                }
+              };
             };
             
             videoElement.currentTime = startTime;
