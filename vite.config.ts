@@ -8,12 +8,6 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    headers: {
-      "Access-Control-Allow-Origin": "https://oscarschasingroo.com",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "*",
-      "Access-Control-Allow-Credentials": "true"
-    },
   },
   build: {
     outDir: 'dist',
