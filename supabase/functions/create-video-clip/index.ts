@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -14,23 +15,26 @@ serve(async (req) => {
   try {
     const { videoBlob, title, articleId, startTime, duration } = await req.json()
 
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // Convert base64 to Blob
-    const binaryString = atob(videoBlob.split(',')[1]);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    const base64Data = videoBlob.split(',')[1];
+    const binaryStr = atob(base64Data);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
     }
+    
     const blob = new Blob([bytes], { type: 'video/webm' });
 
     // Generate unique filename
     const fileName = `${crypto.randomUUID()}.webm`
 
-    // Upload to storage
+    // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('video-clips')
       .upload(fileName, blob, {
@@ -48,7 +52,7 @@ serve(async (req) => {
       .from('video-clips')
       .getPublicUrl(fileName)
 
-    // Save to database
+    // Save metadata to database
     const { data: clipData, error: dbError } = await supabase
       .from('video_clips')
       .insert({
@@ -68,30 +72,31 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        message: 'Video clip created successfully',
-        clipId: clipData.id,
-        url: publicUrl
+        success: true,
+        url: publicUrl,
+        clip: clipData
       }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
       }
     )
+
   } catch (error) {
-    console.error('Error creating video clip:', error)
+    console.error('Error in create-video-clip function:', error)
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to create video clip',
-        details: error.message 
+        success: false,
+        error: error.message 
       }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
-        status: 500 
+        status: 500
       }
     )
   }
