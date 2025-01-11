@@ -1,17 +1,17 @@
 # Enable rewrite engine
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  
-  # Don't rewrite files or directories
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Handle static assets in the assets directory
-  RewriteCond %{REQUEST_URI} !^/assets/
-  
-  # Rewrite everything else to index.html
-  RewriteRule ^(.*)$ index.html [L]
+    RewriteEngine On
+    RewriteBase /
+    
+    # Don't rewrite files or directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Handle static assets in the assets directory
+    RewriteCond %{REQUEST_URI} !^/assets/
+    
+    # Rewrite everything else to index.html
+    RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
 # Set correct MIME types
@@ -25,10 +25,9 @@
 
 # Enable CORS
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "https://oscarschasingroo.com"
+    Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
     Header set Access-Control-Allow-Headers "*"
-    Header set Access-Control-Allow-Credentials "true"
     
     # Ensure JavaScript modules are served with correct MIME type
     <FilesMatch "\.(js|mjs)$">
