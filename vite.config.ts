@@ -4,9 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  // Replace 'your-repo-name' with your actual GitHub repository name
-  // For example, if your repo is 'my-project', use '/my-project/'
-  base: '/your-repo-name/',
+  // Since this is for username.github.io, we use '/' as the base
+  base: '/',
   server: {
     host: "::",
     port: 8080,
