@@ -1,12 +1,7 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
-/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS variables */
 :root {
   --background: 0 0% 4%;
   --foreground: 0 0% 100%;
@@ -17,26 +12,9 @@
   --destructive-foreground: 0 0% 98%;
 }
 
-/* Base styles */
 @layer base {
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', sans-serif;
-  }
-}
-
-/* Component styles */
-@layer components {
-  .prose-custom {
-    @apply prose prose-invert max-w-none;
-  }
-
-  .article-card {
-    @apply bg-secondary p-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-primary/10;
-  }
-
-  .nav-link {
-    @apply text-gray-400 hover:text-primary transition-colors duration-200;
   }
 }
