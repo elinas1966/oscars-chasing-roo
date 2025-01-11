@@ -61,11 +61,9 @@ const Index = () => {
             >
               Sign In
             </Button>
-            <Alert variant="default" className="bg-primary/10 border-primary/20 max-w-xs">
-              <AlertDescription className="text-primary text-xs">
-                This site is by invitation only
-              </AlertDescription>
-            </Alert>
+            <p className="text-sm text-muted-foreground">
+              Membership is by invitation only
+            </p>
           </div>
         )}
       </header>
