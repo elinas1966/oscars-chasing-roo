@@ -1,3 +1,4 @@
+
 import { Article, formatDate } from "@/utils/articleUtils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,9 @@ export const ArticleCard = ({
           <Badge variant="outline" className="text-primary border-primary">
             {article.language}
           </Badge>
+          <Badge variant="secondary" className="text-primary/80">
+            {article.source}
+          </Badge>
           {isAdmin && (
             <AdminControls
               article={article}
@@ -71,8 +75,7 @@ export const ArticleCard = ({
         </a>
       </h3>
       <p className="text-gray-400 mb-4 line-clamp-3">{article.summary}</p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-primary/80">{article.source}</span>
+      <div className="flex justify-end">
         <a
           href={article.url}
           target="_blank"

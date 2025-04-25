@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,6 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
-  const [sortAscending, setSortAscending] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [showAllArticles, setShowAllArticles] = useState(true);
 
@@ -37,13 +35,11 @@ export const ArticleList = () => {
   }, []);
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["articles", sortAscending],
+    queryKey: ["articles"],
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
       
-      const { data, error } = await query
-        .order("date", { ascending: false }) // Default sort by date descending
-        .order("source", { ascending: sortAscending }); // Secondary sort by source
+      const { data, error } = await query.order("date", { ascending: false });
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -181,18 +177,7 @@ export const ArticleList = () => {
       <div className="flex gap-8">
         <div className="w-1/4 space-y-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-serif text-primary/90">Sources</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSortAscending(!sortAscending)}
-                className="hover:bg-primary/10"
-                title={sortAscending ? "Sort ascending" : "Sort descending"}
-              >
-                <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
-              </Button>
-            </div>
+            <h3 className="text-xl font-serif text-primary/90">Sources</h3>
             <Button
               variant="outline"
               size="sm"
