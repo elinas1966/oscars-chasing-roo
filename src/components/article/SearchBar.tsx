@@ -18,7 +18,7 @@ interface SearchBarProps {
   onSearch: (term: string) => void;
 }
 
-export const SearchBar = ({ articles, onSearch }: SearchBarProps) => {
+export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
 
@@ -35,7 +35,7 @@ export const SearchBar = ({ articles, onSearch }: SearchBarProps) => {
 
   const searchSuggestions = Array.from(
     new Set(
-      articles
+      (articles || [])
         .map(article => article.title.toLowerCase())
         .filter(title => title.includes(value.toLowerCase()))
     )
@@ -43,7 +43,7 @@ export const SearchBar = ({ articles, onSearch }: SearchBarProps) => {
 
   return (
     <div className="relative flex items-center gap-2 w-full max-w-sm">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open && value.length > 0} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className="flex-1 flex items-center">
             <Input
@@ -57,7 +57,7 @@ export const SearchBar = ({ articles, onSearch }: SearchBarProps) => {
             />
           </div>
         </PopoverTrigger>
-        {value && (
+        {value && searchSuggestions.length > 0 && (
           <PopoverContent className="w-full p-0" align="start">
             <Command>
               <CommandEmpty>No results found.</CommandEmpty>
