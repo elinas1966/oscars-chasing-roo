@@ -7,12 +7,11 @@ import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, LayoutGrid } from "lucide-react";
+import { ArrowDownAZ } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
@@ -37,13 +36,9 @@ export const ArticleList = () => {
   }, []);
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["articles", selectedLanguage, sortAscending],
+    queryKey: ["articles", sortAscending],
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
-      
-      if (selectedLanguage !== "all") {
-        query = query.eq("language", selectedLanguage);
-      }
       
       const { data, error } = await query.order("source", { ascending: sortAscending });
       
@@ -178,35 +173,23 @@ export const ArticleList = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSortAscending(!sortAscending)}
-              className="hover:bg-primary/10"
-              title={sortAscending ? "Sort ascending" : "Sort descending"}
-            >
-              <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
-            </Button>
-          </div>
-          <select 
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="bg-secondary/50 backdrop-blur-sm text-white border border-primary/20 rounded-md px-4 py-2 focus:border-primary/50 transition-colors"
-          >
-            <option value="all">All Languages</option>
-            <option value="EN">English</option>
-            <option value="ES">Spanish</option>
-            <option value="FR">French</option>
-          </select>
-        </div>
       </div>
 
       <div className="flex gap-8">
         <div className="w-1/4 space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-serif text-primary/90">Sources</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-serif text-primary/90">Sources</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSortAscending(!sortAscending)}
+                className="hover:bg-primary/10"
+                title={sortAscending ? "Sort ascending" : "Sort descending"}
+              >
+                <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
