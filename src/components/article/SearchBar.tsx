@@ -36,18 +36,32 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   // Make sure we have valid articles before trying to extract titles
   const safeArticles = Array.isArray(articles) ? articles : [];
   
-  // Generate search suggestions safely
-  const searchSuggestions = value.length > 0 && safeArticles.length > 0
-    ? Array.from(
-        new Set(
-          safeArticles
-            .filter(article => article && article.title) // Filter out any invalid articles
-            .map(article => article.title.toLowerCase())
-            .filter(title => title.includes(value.toLowerCase()))
-        )
-      ).slice(0, 5)
-    : [];
+  // Generate search suggestions only if we have a value and articles
+  let searchSuggestions: string[] = [];
+  
+  // Only try to create suggestions if we have a search value and articles
+  if (value.length > 0 && safeArticles.length > 0) {
+    try {
+      // Filter articles safely
+      const filteredArticles = safeArticles.filter(article => 
+        article && article.title && 
+        article.title.toLowerCase().includes(value.toLowerCase())
+      );
+      
+      // Get unique titles
+      const uniqueTitles = new Set(
+        filteredArticles.map(article => article.title.toLowerCase())
+      );
+      
+      // Convert to array and limit to 5 results
+      searchSuggestions = Array.from(uniqueTitles).slice(0, 5);
+    } catch (error) {
+      console.error("Error creating search suggestions:", error);
+      searchSuggestions = [];
+    }
+  }
 
+  // Only show suggestions if we have any
   const showSuggestions = open && value.length > 0 && searchSuggestions.length > 0;
 
   return (
@@ -80,7 +94,6 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
                   </CommandItem>
                 ))}
               </CommandGroup>
-              {searchSuggestions.length === 0 && <CommandEmpty>No results found.</CommandEmpty>}
             </Command>
           </PopoverContent>
         )}
