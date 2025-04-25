@@ -1,17 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Article } from "@/utils/articleUtils";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 
 interface SearchBarProps {
   articles: Article[];
@@ -21,6 +18,38 @@ interface SearchBarProps {
 export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  // Update suggestions whenever value or articles change
+  useEffect(() => {
+    if (!value || !articles || !Array.isArray(articles)) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      // Safe filtering
+      const filtered = articles.filter(article => 
+        article && 
+        typeof article === 'object' && 
+        article.title && 
+        typeof article.title === 'string' &&
+        article.title.toLowerCase().includes(value.toLowerCase())
+      );
+      
+      // Extract and deduplicate titles
+      if (filtered && filtered.length > 0) {
+        const titles = filtered.map(article => article.title.toLowerCase());
+        const uniqueTitles = Array.from(new Set(titles)).slice(0, 5);
+        setSuggestions(uniqueTitles);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error("Error creating search suggestions:", error);
+      setSuggestions([]);
+    }
+  }, [value, articles]);
 
   const handleSelect = (selectedValue: string) => {
     setValue(selectedValue);
@@ -31,49 +60,15 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   const handleClear = () => {
     setValue("");
     onSearch("");
+    setSuggestions([]);
   };
 
-  // Make sure we have valid articles before trying to extract titles
-  const safeArticles = Array.isArray(articles) ? articles : [];
-  
-  // Generate search suggestions only if we have a value and articles
-  let searchSuggestions: string[] = [];
-  
-  // Only try to create suggestions if we have a search value and articles
-  if (value.length > 0 && safeArticles.length > 0) {
-    try {
-      // Filter articles safely - make sure we handle all potential undefined values
-      const filteredArticles = safeArticles.filter(article => 
-        article && 
-        typeof article === 'object' && 
-        article.title && 
-        typeof article.title === 'string' &&
-        article.title.toLowerCase().includes(value.toLowerCase())
-      );
-      
-      // Get unique titles only if we have valid filtered articles
-      if (filteredArticles && filteredArticles.length > 0) {
-        const uniqueTitles = new Set(
-          filteredArticles.map(article => article.title.toLowerCase())
-        );
-        
-        // Convert to array and limit to 5 results
-        if (uniqueTitles.size > 0) {
-          searchSuggestions = Array.from(uniqueTitles).slice(0, 5);
-        }
-      }
-    } catch (error) {
-      console.error("Error creating search suggestions:", error);
-      searchSuggestions = [];
-    }
-  }
-
-  // Only show suggestions if we have any
-  const showSuggestions = open && value.length > 0 && searchSuggestions.length > 0;
+  // Only show popover if we have suggestions and value
+  const showSuggestions = value.length > 0 && suggestions.length > 0;
 
   return (
     <div className="relative flex items-center gap-2 w-full max-w-sm">
-      <Popover open={showSuggestions} onOpenChange={setOpen}>
+      <Popover open={open && showSuggestions} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className="flex-1 flex items-center">
             <Input
@@ -89,21 +84,20 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
         </PopoverTrigger>
         {showSuggestions && (
           <PopoverContent className="w-full p-0" align="start">
-            {searchSuggestions.length > 0 && (
-              <Command>
-                <CommandGroup>
-                  {searchSuggestions.map((suggestion, index) => (
-                    <CommandItem
-                      key={`${suggestion}-${index}`}
-                      onSelect={() => handleSelect(suggestion)}
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      {suggestion}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            )}
+            <div className="rounded-md bg-popover text-popover-foreground overflow-hidden">
+              <div className="p-1">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={`${suggestion}-${index}`}
+                    onClick={() => handleSelect(suggestion)}
+                    className="flex items-center w-full rounded-sm px-2 py-1.5 text-sm cursor-default select-none hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Search className="mr-2 h-4 w-4 shrink-0" />
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
           </PopoverContent>
         )}
       </Popover>
