@@ -51,6 +51,12 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     }
   }, [value, articles]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    onSearch(newValue);
+  };
+
   const handleSelect = (selectedValue: string) => {
     setValue(selectedValue);
     onSearch(selectedValue);
@@ -74,10 +80,7 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
             <Input
               placeholder="Search articles..."
               value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onSearch(e.target.value);
-              }}
+              onChange={handleInputChange}
               className="w-full"
             />
           </div>
