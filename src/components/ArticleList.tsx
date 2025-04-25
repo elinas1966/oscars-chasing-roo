@@ -16,8 +16,8 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
-  const [sortAscending, setSortAscending] = useState(false); // Default to newest first (descending)
-  const [sortField, setSortField] = useState<'date'>('date'); // Only using date sorting now
+  const [sortAscending, setSortAscending] = useState(false);
+  const [sortField, setSortField] = useState<'date' | 'source'>('date');
 
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -36,7 +36,7 @@ export const ArticleList = () => {
   }, []);
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["articles", selectedLanguage, sortAscending],
+    queryKey: ["articles", selectedLanguage, sortField, sortAscending],
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
       
@@ -44,7 +44,7 @@ export const ArticleList = () => {
         query = query.eq("language", selectedLanguage);
       }
       
-      const { data, error } = await query.order('date', { ascending: sortAscending });
+      const { data, error } = await query.order(sortField, { ascending: sortAscending });
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -145,6 +145,10 @@ export const ArticleList = () => {
     setSortAscending(!sortAscending);
   };
 
+  const handleSortFieldChange = (field: 'date' | 'source') => {
+    setSortField(field);
+  };
+
   if (isLoading) {
     return (
       <section className="py-16 px-4">
@@ -179,19 +183,39 @@ export const ArticleList = () => {
         <div className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-4">
             <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSort}
-              className="hover:bg-primary/10"
-              title={sortAscending ? "Show newest first" : "Show oldest first"}
-            >
-              {sortAscending ? (
-                <ArrowDownAZ className="text-primary" />
-              ) : (
-                <ArrowUpAZ className="text-primary" />
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSort}
+                className="hover:bg-primary/10"
+                title={sortAscending ? "Sort ascending" : "Sort descending"}
+              >
+                {sortAscending ? (
+                  <ArrowDownAZ className="text-primary" />
+                ) : (
+                  <ArrowUpAZ className="text-primary" />
+                )}
+              </Button>
+              <Button
+                variant={sortField === 'date' ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => handleSortFieldChange('date')}
+                className="hover:bg-primary/10"
+                title="Sort by date"
+              >
+                <Calendar className={sortField === 'date' ? "text-primary" : "text-primary/50"} />
+              </Button>
+              <Button
+                variant={sortField === 'source' ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => handleSortFieldChange('source')}
+                className="hover:bg-primary/10"
+                title="Sort by source"
+              >
+                <ArrowDownAZ className={sortField === 'source' ? "text-primary" : "text-primary/50"} />
+              </Button>
+            </div>
           </div>
           <select 
             value={selectedLanguage}
