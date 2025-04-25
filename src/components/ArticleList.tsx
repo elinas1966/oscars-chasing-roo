@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, ArrowUpAZ } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Calendar } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -16,7 +17,8 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
-  const [sortAscending, setSortAscending] = useState(true);
+  const [sortAscending, setSortAscending] = useState(false); // Default to newest first (descending)
+  const [sortField, setSortField] = useState<'date' | 'source'>('date'); // Default sort by date
 
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -35,7 +37,7 @@ export const ArticleList = () => {
   }, []);
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["articles", selectedLanguage],
+    queryKey: ["articles", selectedLanguage, sortField, sortAscending],
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
       
@@ -43,7 +45,7 @@ export const ArticleList = () => {
         query = query.eq("language", selectedLanguage);
       }
       
-      const { data, error } = await query.order("date", { ascending: sortAscending });
+      const { data, error } = await query.order(sortField, { ascending: sortAscending });
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -144,6 +146,10 @@ export const ArticleList = () => {
     setSortAscending(!sortAscending);
   };
 
+  const handleSortFieldChange = (field: 'date' | 'source') => {
+    setSortField(field);
+  };
+
   if (isLoading) {
     return (
       <section className="py-16 px-4">
@@ -178,18 +184,30 @@ export const ArticleList = () => {
         <div className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-4">
             <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSort}
-              className="hover:bg-primary/10"
-            >
-              {sortAscending ? (
-                <ArrowDownAZ className="text-primary" />
-              ) : (
-                <ArrowUpAZ className="text-primary" />
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSort}
+                className="hover:bg-primary/10"
+                title={sortAscending ? "Sort descending" : "Sort ascending"}
+              >
+                {sortAscending ? (
+                  <ArrowDownAZ className="text-primary" />
+                ) : (
+                  <ArrowUpAZ className="text-primary" />
+                )}
+              </Button>
+              <Button
+                variant={sortField === 'date' ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => handleSortFieldChange('date')}
+                className="hover:bg-primary/10"
+                title="Sort by date"
+              >
+                <Calendar className={sortField === 'date' ? "text-primary" : "text-primary/50"} />
+              </Button>
+            </div>
           </div>
           <select 
             value={selectedLanguage}

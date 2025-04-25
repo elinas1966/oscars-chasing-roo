@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 
 export interface Article {
@@ -20,7 +21,8 @@ export const groupArticlesBySourceAndDate = (articles: Article[]) => {
     return acc;
   }, {} as Record<string, Article[]>);
 
-  // Then sort articles within each source by date
+  // Then sort articles within each source by date (this happens regardless of the sort order from the API)
+  // This ensures consistent display within each source group
   Object.keys(groupedBySource).forEach(source => {
     groupedBySource[source].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
