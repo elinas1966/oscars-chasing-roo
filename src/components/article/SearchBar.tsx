@@ -42,19 +42,26 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   // Only try to create suggestions if we have a search value and articles
   if (value.length > 0 && safeArticles.length > 0) {
     try {
-      // Filter articles safely
+      // Filter articles safely - make sure we handle all potential undefined values
       const filteredArticles = safeArticles.filter(article => 
-        article && article.title && 
+        article && 
+        typeof article === 'object' && 
+        article.title && 
+        typeof article.title === 'string' &&
         article.title.toLowerCase().includes(value.toLowerCase())
       );
       
-      // Get unique titles
-      const uniqueTitles = new Set(
-        filteredArticles.map(article => article.title.toLowerCase())
-      );
-      
-      // Convert to array and limit to 5 results
-      searchSuggestions = Array.from(uniqueTitles).slice(0, 5);
+      // Get unique titles only if we have valid filtered articles
+      if (filteredArticles && filteredArticles.length > 0) {
+        const uniqueTitles = new Set(
+          filteredArticles.map(article => article.title.toLowerCase())
+        );
+        
+        // Convert to array and limit to 5 results
+        if (uniqueTitles.size > 0) {
+          searchSuggestions = Array.from(uniqueTitles).slice(0, 5);
+        }
+      }
     } catch (error) {
       console.error("Error creating search suggestions:", error);
       searchSuggestions = [];
@@ -82,19 +89,21 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
         </PopoverTrigger>
         {showSuggestions && (
           <PopoverContent className="w-full p-0" align="start">
-            <Command>
-              <CommandGroup>
-                {searchSuggestions.map((suggestion) => (
-                  <CommandItem
-                    key={suggestion}
-                    onSelect={() => handleSelect(suggestion)}
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {suggestion}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
+            {searchSuggestions.length > 0 && (
+              <Command>
+                <CommandGroup>
+                  {searchSuggestions.map((suggestion, index) => (
+                    <CommandItem
+                      key={`${suggestion}-${index}`}
+                      onSelect={() => handleSelect(suggestion)}
+                    >
+                      <Search className="mr-2 h-4 w-4" />
+                      {suggestion}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            )}
           </PopoverContent>
         )}
       </Popover>
