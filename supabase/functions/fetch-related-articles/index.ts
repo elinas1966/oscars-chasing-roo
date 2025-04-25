@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
@@ -51,6 +52,11 @@ serve(async (req) => {
 
     const articles = [];
     let successfulScrapes = 0;
+    let gnewsCount = 0;
+    let googleCount = 0;
+    
+    // Get today's date in ISO format (YYYY-MM-DD)
+    const today = new Date().toISOString().split('T')[0];
 
     // Fetch from GNews
     try {
@@ -67,9 +73,10 @@ serve(async (req) => {
             source: new URL(article.url).hostname,
             url: article.url,
             language: 'EN',
-            date: article.publishedAt.split('T')[0],
+            date: article.publishedAt.split('T')[0], // Keep the original date from the API
           });
           successfulScrapes++;
+          gnewsCount++;
         }
       } else {
         console.error('GNews API error:', gnewsData);
@@ -126,9 +133,10 @@ serve(async (req) => {
                 source: new URL(item.link).hostname,
                 url: item.link,
                 language: 'EN',
-                date: new Date().toISOString().split('T')[0],
+                date: today, // Use today's date for Google search results
               });
               successfulScrapes++;
+              googleCount++;
             }
           } catch (error) {
             console.error(`Error scraping ${item.link}:`, error);
@@ -173,7 +181,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: 'Articles fetched and stored successfully',
-        count: successfulScrapes
+        count: successfulScrapes,
+        gnewsCount,
+        googleCount
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

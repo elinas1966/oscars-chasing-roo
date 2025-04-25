@@ -1,5 +1,5 @@
 
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 export interface Article {
   id: string;
@@ -40,6 +40,12 @@ export const groupArticlesBySourceAndDate = (articles: Article[]) => {
 };
 
 export const formatDate = (date: string) => {
-  return format(new Date(date), "MMM d, yyyy");
+  try {
+    // Ensure we're working with a proper ISO date string by parsing it first
+    const parsedDate = parseISO(date);
+    return format(parsedDate, "MMM d, yyyy");
+  } catch (error) {
+    console.error("Error formatting date:", date, error);
+    return date; // Return the original string if formatting fails
+  }
 };
-
