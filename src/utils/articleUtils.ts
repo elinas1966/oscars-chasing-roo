@@ -11,18 +11,25 @@ export interface Article {
   language: string;
 }
 
+export const formatSource = (source: string): string => {
+  return source.replace(/^www\./i, '');
+};
+
 export const groupArticlesBySourceAndDate = (articles: Article[]) => {
-  // First group by source
+  // First group by source, removing www. prefix and deduplicating
   const groupedBySource = articles.reduce((acc, article) => {
-    if (!acc[article.source]) {
-      acc[article.source] = [];
+    const formattedSource = formatSource(article.source);
+    if (!acc[formattedSource]) {
+      acc[formattedSource] = [];
     }
-    acc[article.source].push(article);
+    acc[formattedSource].push({
+      ...article,
+      source: formattedSource // Update the source in the article object
+    });
     return acc;
   }, {} as Record<string, Article[]>);
 
-  // Then sort articles within each source by date (this happens regardless of the sort order from the API)
-  // This ensures consistent display within each source group
+  // Then sort articles within each source by date
   Object.keys(groupedBySource).forEach(source => {
     groupedBySource[source].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -35,3 +42,4 @@ export const groupArticlesBySourceAndDate = (articles: Article[]) => {
 export const formatDate = (date: string) => {
   return format(new Date(date), "MMM d, yyyy");
 };
+
