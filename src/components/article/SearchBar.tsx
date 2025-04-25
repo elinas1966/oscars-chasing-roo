@@ -1,14 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { Article } from "@/utils/articleUtils";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
 
 interface SearchBarProps {
   articles: Article[];
@@ -20,7 +14,6 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  // Update suggestions whenever value or articles change
   useEffect(() => {
     if (!value || !articles || !Array.isArray(articles)) {
       setSuggestions([]);
@@ -28,7 +21,6 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     }
 
     try {
-      // Safe filtering
       const filtered = articles.filter(article => 
         article && 
         typeof article === 'object' && 
@@ -37,7 +29,6 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
         article.title.toLowerCase().includes(value.toLowerCase())
       );
       
-      // Extract and deduplicate titles
       if (filtered && filtered.length > 0) {
         const titles = filtered.map(article => article.title.toLowerCase());
         const uniqueTitles = Array.from(new Set(titles)).slice(0, 5);
@@ -69,7 +60,6 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     setSuggestions([]);
   };
 
-  // Only show suggestions if we have suggestions and value
   const showSuggestions = value.length > 0 && suggestions.length > 0;
 
   return (
@@ -79,12 +69,12 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
           placeholder="Search articles..."
           value={value}
           onChange={handleInputChange}
-          className="w-full"
+          className="w-full bg-secondary text-secondary-foreground"
           onFocus={() => setOpen(true)}
         />
         
         {showSuggestions && open && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-popover rounded-md shadow-md z-50 max-h-[200px] overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-secondary rounded-md shadow-md z-50 max-h-[200px] overflow-y-auto">
             <div className="p-1">
               {suggestions.map((suggestion, index) => (
                 <button
