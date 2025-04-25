@@ -3,11 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
-import { Button } from "@/components/ui/button";
-import { ArrowDownAZ } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -15,9 +12,6 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
-  const [sortAscending, setSortAscending] = useState(false);
-  const [selectedSource, setSelectedSource] = useState<string | null>(null);
-  const [showAllArticles, setShowAllArticles] = useState(true);
 
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -111,65 +105,18 @@ export const ArticleList = () => {
     },
   });
 
-  const handleEdit = (article: Article) => {
-    setEditingArticle(article.id);
-    setEditForm(article);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingArticle(null);
-    setEditForm({});
-  };
-
-  const handleSaveEdit = (articleId: string) => {
-    if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
-      toast({
-        title: "Error",
-        description: "All fields are required",
-        variant: "destructive",
-      });
-      return;
-    }
-    updateArticle.mutate({ ...editForm, id: articleId });
-  };
-
-  const handleEditFormChange = (field: keyof Article, value: string) => {
-    setEditForm(prev => ({ ...prev, [field]: value }));
-  };
-
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
-        <div className="flex gap-8">
-          <div className="w-1/4">
-            <Skeleton className="h-8 w-48 mb-4" />
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-12 w-full mb-2" />
-            ))}
-          </div>
-          <div className="w-3/4">
-            <div className="flex justify-between items-center mb-4">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-10 w-32" />
-            </div>
-            <div className="grid gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-40 w-full" />
-              ))}
-            </div>
-          </div>
+        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="grid gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
         </div>
       </div>
     );
   }
-
-  const groupedArticles = articles ? groupArticlesBySourceAndDate(articles) : {};
-  const sources = Object.keys(groupedArticles).sort((a, b) => {
-    return sortAscending ? a.localeCompare(b) : b.localeCompare(a);
-  });
-  const filteredArticles = selectedSource && !showAllArticles 
-    ? { [selectedSource]: groupedArticles[selectedSource] }
-    : groupedArticles;
 
   return (
     <div className="container mx-auto p-4">
@@ -177,81 +124,39 @@ export const ArticleList = () => {
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
       </div>
 
-      <div className="flex gap-8">
-        <div className="w-1/4 space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-serif text-primary/90">Sources</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSortAscending(!sortAscending)}
-                className="hover:bg-primary/10"
-                title={sortAscending ? "Sort descending" : "Sort ascending"}
-              >
-                <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedSource(null);
-                setShowAllArticles(true);
-              }}
-            >
-              Show All
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {sources.map((source) => (
-              <Button
-                key={source}
-                variant={selectedSource === source && !showAllArticles ? "secondary" : "ghost"}
-                className="w-full justify-start text-left truncate"
-                onClick={() => {
-                  setSelectedSource(source);
-                  setShowAllArticles(false);
-                }}
-              >
-                <span className="truncate">
-                  {source}
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    ({groupedArticles[source].length})
-                  </span>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-3/4">
-          <div className="space-y-8">
-            {Object.entries(filteredArticles).map(([source, sourceArticles]) => (
-              <div key={source} className="space-y-4">
-                <h3 className="text-2xl font-serif text-primary/90 border-b border-primary/20 pb-2 break-words">
-                  {source}
-                </h3>
-                <div className="grid gap-4">
-                  {sourceArticles.map((article) => (
-                    <ArticleCard
-                      key={article.id}
-                      article={article}
-                      isAdmin={isAdmin}
-                      isEditing={editingArticle === article.id}
-                      editForm={editForm}
-                      onEdit={handleEdit}
-                      onDelete={(id) => deleteArticle.mutate(id)}
-                      onCancelEdit={handleCancelEdit}
-                      onSaveEdit={handleSaveEdit}
-                      onEditFormChange={handleEditFormChange}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="space-y-8">
+        {articles && articles.map((article) => (
+          <ArticleCard
+            key={article.id}
+            article={article}
+            isAdmin={isAdmin}
+            isEditing={editingArticle === article.id}
+            editForm={editForm}
+            onEdit={(a) => {
+              setEditingArticle(a.id);
+              setEditForm(a);
+            }}
+            onDelete={(id) => deleteArticle.mutate(id)}
+            onCancelEdit={() => {
+              setEditingArticle(null);
+              setEditForm({});
+            }}
+            onSaveEdit={(articleId) => {
+              if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
+                toast({
+                  title: "Error",
+                  description: "All fields are required",
+                  variant: "destructive",
+                });
+                return;
+              }
+              updateArticle.mutate({ ...editForm, id: articleId });
+            }}
+            onEditFormChange={(field, value) => {
+              setEditForm(prev => ({ ...prev, [field]: value }));
+            }}
+          />
+        ))}
       </div>
     </div>
   );
