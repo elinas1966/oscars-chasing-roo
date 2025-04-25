@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,7 +107,9 @@ export const ArticleList = () => {
     },
   });
 
-  const filteredArticles = articles?.filter(article =>
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  
+  const filteredArticles = safeArticles.filter(article =>
     article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     article.summary.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -133,42 +134,48 @@ export const ArticleList = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
-        <SearchBar articles={articles || []} onSearch={setSearchTerm} />
+        <SearchBar articles={safeArticles} onSearch={setSearchTerm} />
       </div>
 
       <div className="space-y-8">
-        {filteredArticles && filteredArticles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            isAdmin={isAdmin}
-            isEditing={editingArticle === article.id}
-            editForm={editForm}
-            onEdit={(a) => {
-              setEditingArticle(a.id);
-              setEditForm(a);
-            }}
-            onDelete={(id) => deleteArticle.mutate(id)}
-            onCancelEdit={() => {
-              setEditingArticle(null);
-              setEditForm({});
-            }}
-            onSaveEdit={(articleId) => {
-              if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
-                toast({
-                  title: "Error",
-                  description: "All fields are required",
-                  variant: "destructive",
-                });
-                return;
-              }
-              updateArticle.mutate({ ...editForm, id: articleId });
-            }}
-            onEditFormChange={(field, value) => {
-              setEditForm(prev => ({ ...prev, [field]: value }));
-            }}
-          />
-        ))}
+        {filteredArticles && filteredArticles.length > 0 ? (
+          filteredArticles.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              isAdmin={isAdmin}
+              isEditing={editingArticle === article.id}
+              editForm={editForm}
+              onEdit={(a) => {
+                setEditingArticle(a.id);
+                setEditForm(a);
+              }}
+              onDelete={(id) => deleteArticle.mutate(id)}
+              onCancelEdit={() => {
+                setEditingArticle(null);
+                setEditForm({});
+              }}
+              onSaveEdit={(articleId) => {
+                if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
+                  toast({
+                    title: "Error",
+                    description: "All fields are required",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                updateArticle.mutate({ ...editForm, id: articleId });
+              }}
+              onEditFormChange={(field, value) => {
+                setEditForm(prev => ({ ...prev, [field]: value }));
+              }}
+            />
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No articles found matching your search.</p>
+          </div>
+        )}
       </div>
     </div>
   );

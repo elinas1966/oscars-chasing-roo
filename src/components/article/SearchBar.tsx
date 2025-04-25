@@ -33,17 +33,26 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     onSearch("");
   };
 
-  const searchSuggestions = Array.from(
-    new Set(
-      (articles || [])
-        .map(article => article.title.toLowerCase())
-        .filter(title => title.includes(value.toLowerCase()))
-    )
-  ).slice(0, 5);
+  // Make sure we have valid articles before trying to extract titles
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  
+  // Generate search suggestions safely
+  const searchSuggestions = safeArticles.length > 0 && value.length > 0
+    ? Array.from(
+        new Set(
+          safeArticles
+            .filter(article => article && article.title) // Filter out any invalid articles
+            .map(article => article.title.toLowerCase())
+            .filter(title => title.includes(value.toLowerCase()))
+        )
+      ).slice(0, 5)
+    : [];
+
+  const showSuggestions = open && value.length > 0 && searchSuggestions.length > 0;
 
   return (
     <div className="relative flex items-center gap-2 w-full max-w-sm">
-      <Popover open={open && value.length > 0} onOpenChange={setOpen}>
+      <Popover open={showSuggestions} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className="flex-1 flex items-center">
             <Input
@@ -57,10 +66,9 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
             />
           </div>
         </PopoverTrigger>
-        {value && searchSuggestions.length > 0 && (
+        {showSuggestions && (
           <PopoverContent className="w-full p-0" align="start">
             <Command>
-              <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
                 {searchSuggestions.map((suggestion) => (
                   <CommandItem
@@ -72,6 +80,7 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
                   </CommandItem>
                 ))}
               </CommandGroup>
+              <CommandEmpty>No results found.</CommandEmpty>
             </Command>
           </PopoverContent>
         )}
