@@ -22,15 +22,17 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     }
 
     try {
+      const searchTerm = value.toLowerCase();
+      // Look for matches in both title and summary
       const filtered = articles.filter(article => 
         article && 
         typeof article === 'object' && 
-        article.title && 
-        typeof article.title === 'string' &&
-        article.title.toLowerCase().includes(value.toLowerCase())
+        ((article.title && typeof article.title === 'string' && article.title.toLowerCase().includes(searchTerm)) ||
+         (article.summary && typeof article.summary === 'string' && article.summary.toLowerCase().includes(searchTerm)))
       );
       
       if (filtered && filtered.length > 0) {
+        // Get unique titles for suggestions
         const titles = filtered.map(article => article.title.toLowerCase());
         const uniqueTitles = Array.from(new Set(titles)).slice(0, 5);
         setSuggestions(uniqueTitles);

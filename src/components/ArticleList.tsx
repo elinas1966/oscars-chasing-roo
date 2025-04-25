@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,7 +116,6 @@ export const ArticleList = () => {
     },
   });
 
-  // Ensure articles is always an array, even if it's undefined or null
   const safeArticles = Array.isArray(articles) ? articles : [];
   
   const filteredArticles = searchTerm.trim() === "" 
