@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
+import { Search, RotateCcw } from "lucide-react";
 import { Article } from "@/utils/articleUtils";
 
 interface SearchBarProps {
@@ -116,8 +116,9 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
           size="icon"
           onClick={handleClear}
           className="shrink-0"
+          title="Reset search"
         >
-          <X className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4" />
         </Button>
       )}
     </div>
