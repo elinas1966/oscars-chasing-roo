@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,7 +44,7 @@ export const VideoSection = () => {
 
   if (isLoading) {
     return (
-      <section className="max-w-4xl mx-auto px-4 py-12">
+      <section className="max-w-4xl mx-auto px-4 py-8"> {/* Reduced vertical padding */}
         <div className="animate-pulse">
           <div className="h-8 w-64 bg-primary/10 rounded mb-8 mx-auto"></div>
           <div className="aspect-video bg-primary/5 rounded-lg"></div>
@@ -53,7 +54,7 @@ export const VideoSection = () => {
   }
 
   return (
-    <section className="max-w-4xl mx-auto px-4 py-12">
+    <section className="max-w-4xl mx-auto px-4 py-8"> {/* Reduced vertical padding */}
       <h2 className="font-serif text-3xl md:text-4xl text-primary mb-6 text-center">
         {video?.title || "Chasing Roo"}
       </h2>
