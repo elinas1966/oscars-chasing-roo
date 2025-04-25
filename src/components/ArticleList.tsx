@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
+import { Button } from "@/components/ui/button";
+import { ArrowDownAZ, ArrowUpAZ } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -14,8 +16,8 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
+  const [sortAscending, setSortAscending] = useState(true);
 
-  // Check if user is admin
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -41,7 +43,7 @@ export const ArticleList = () => {
         query = query.eq("language", selectedLanguage);
       }
       
-      const { data, error } = await query.order("date", { ascending: false });
+      const { data, error } = await query.order("date", { ascending: sortAscending });
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -138,6 +140,10 @@ export const ArticleList = () => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSort = () => {
+    setSortAscending(!sortAscending);
+  };
+
   if (isLoading) {
     return (
       <section className="py-16 px-4">
@@ -170,7 +176,21 @@ export const ArticleList = () => {
     <section className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-12">
-          <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSort}
+              className="hover:bg-primary/10"
+            >
+              {sortAscending ? (
+                <ArrowDownAZ className="text-primary" />
+              ) : (
+                <ArrowUpAZ className="text-primary" />
+              )}
+            </Button>
+          </div>
           <select 
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
