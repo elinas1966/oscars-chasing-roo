@@ -186,7 +186,7 @@ export const ArticleList = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+        <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
             <Button
@@ -254,15 +254,17 @@ export const ArticleList = () => {
               <Button
                 key={source}
                 variant={selectedSource === source && !showAllArticles ? "secondary" : "ghost"}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left truncate"
                 onClick={() => {
                   setSelectedSource(source);
                   setShowAllArticles(false);
                 }}
               >
-                {source}
-                <span className="ml-2 text-sm text-muted-foreground">
-                  ({groupedArticles[source].length})
+                <span className="truncate">
+                  {source}
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    ({groupedArticles[source].length})
+                  </span>
                 </span>
               </Button>
             ))}
@@ -273,7 +275,7 @@ export const ArticleList = () => {
           <div className="space-y-8">
             {Object.entries(filteredArticles).map(([source, sourceArticles]) => (
               <div key={source} className="space-y-4">
-                <h3 className="text-2xl font-serif text-primary/90 border-b border-primary/20 pb-2">
+                <h3 className="text-2xl font-serif text-primary/90 border-b border-primary/20 pb-2 break-words">
                   {source}
                 </h3>
                 <div className="grid gap-4">
