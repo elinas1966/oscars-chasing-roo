@@ -69,41 +69,38 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     setSuggestions([]);
   };
 
-  // Only show popover if we have suggestions and value
+  // Only show suggestions if we have suggestions and value
   const showSuggestions = value.length > 0 && suggestions.length > 0;
 
   return (
     <div className="relative flex items-center gap-2 w-full max-w-sm">
-      <Popover open={open && showSuggestions} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <div className="flex-1 flex items-center">
-            <Input
-              placeholder="Search articles..."
-              value={value}
-              onChange={handleInputChange}
-              className="w-full"
-            />
-          </div>
-        </PopoverTrigger>
-        {showSuggestions && (
-          <PopoverContent className="w-full p-0" align="start">
-            <div className="rounded-md bg-popover text-popover-foreground overflow-hidden">
-              <div className="p-1">
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={`${suggestion}-${index}`}
-                    onClick={() => handleSelect(suggestion)}
-                    className="flex items-center w-full rounded-sm px-2 py-1.5 text-sm cursor-default select-none hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <Search className="mr-2 h-4 w-4 shrink-0" />
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
+      <div className="flex-1 relative">
+        <Input
+          placeholder="Search articles..."
+          value={value}
+          onChange={handleInputChange}
+          className="w-full"
+          onFocus={() => setOpen(true)}
+        />
+        
+        {showSuggestions && open && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover rounded-md shadow-md z-50 max-h-[200px] overflow-y-auto">
+            <div className="p-1">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={`${suggestion}-${index}`}
+                  onClick={() => handleSelect(suggestion)}
+                  className="flex items-center w-full rounded-sm px-2 py-1.5 text-sm cursor-default select-none hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Search className="mr-2 h-4 w-4 shrink-0" />
+                  {suggestion}
+                </button>
+              ))}
             </div>
-          </PopoverContent>
+          </div>
         )}
-      </Popover>
+      </div>
+      
       {value && (
         <Button
           variant="ghost"
