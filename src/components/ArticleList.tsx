@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,7 +133,7 @@ export const ArticleList = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
-        {articles && <SearchBar articles={articles} onSearch={setSearchTerm} />}
+        <SearchBar articles={articles || []} onSearch={setSearchTerm} />
       </div>
 
       <div className="space-y-8">
