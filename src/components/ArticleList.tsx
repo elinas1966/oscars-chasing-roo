@@ -15,6 +15,7 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
+  const [sortAscending, setSortAscending] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [showAllArticles, setShowAllArticles] = useState(true);
 
@@ -163,7 +164,9 @@ export const ArticleList = () => {
   }
 
   const groupedArticles = articles ? groupArticlesBySourceAndDate(articles) : {};
-  const sources = Object.keys(groupedArticles);
+  const sources = Object.keys(groupedArticles).sort((a, b) => {
+    return sortAscending ? a.localeCompare(b) : b.localeCompare(a);
+  });
   const filteredArticles = selectedSource && !showAllArticles 
     ? { [selectedSource]: groupedArticles[selectedSource] }
     : groupedArticles;
@@ -177,7 +180,18 @@ export const ArticleList = () => {
       <div className="flex gap-8">
         <div className="w-1/4 space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-serif text-primary/90">Sources</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-serif text-primary/90">Sources</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSortAscending(!sortAscending)}
+                className="hover:bg-primary/10"
+                title={sortAscending ? "Sort descending" : "Sort ascending"}
+              >
+                <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
