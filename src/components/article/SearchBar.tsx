@@ -23,12 +23,13 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
 
     try {
       const searchTerm = value.toLowerCase();
-      // Look for matches in both title and summary
+      // Look for matches in title, summary, and source
       const filtered = articles.filter(article => 
         article && 
         typeof article === 'object' && 
         ((article.title && typeof article.title === 'string' && article.title.toLowerCase().includes(searchTerm)) ||
-         (article.summary && typeof article.summary === 'string' && article.summary.toLowerCase().includes(searchTerm)))
+         (article.summary && typeof article.summary === 'string' && article.summary.toLowerCase().includes(searchTerm)) ||
+         (article.source && typeof article.source === 'string' && article.source.toLowerCase().includes(searchTerm)))
       );
       
       if (filtered && filtered.length > 0) {

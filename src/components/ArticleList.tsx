@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,7 +123,8 @@ export const ArticleList = () => {
     ? safeArticles 
     : safeArticles.filter(article =>
         (article.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (article.summary || "").toLowerCase().includes(searchTerm.toLowerCase())
+        (article.summary || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (article.source || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
 
   if (isLoading) {
