@@ -9,6 +9,7 @@ import FetchArticles from "@/components/admin/FetchArticles";
 import { GoogleSearch } from "@/components/GoogleSearch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
+import { Home } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -74,7 +75,12 @@ const Admin = () => {
   if (!session) {
     return (
       <main className="max-w-md mx-auto mt-10 p-6">
-        <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Admin Login</h1>
+          <Button variant="ghost" onClick={() => navigate("/")} size="icon">
+            <Home className="h-5 w-5" />
+          </Button>
+        </div>
         {authError && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{authError}</AlertDescription>
@@ -108,7 +114,12 @@ const Admin = () => {
   if (!isAdmin) {
     return (
       <main className="max-w-md mx-auto mt-10 p-6">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Access Denied</h1>
+          <Button variant="ghost" onClick={() => navigate("/")} size="icon">
+            <Home className="h-5 w-5" />
+          </Button>
+        </div>
         <p className="mb-4">You need admin privileges to access this page.</p>
         <Button onClick={() => navigate("/")}>Return to Home</Button>
       </main>
