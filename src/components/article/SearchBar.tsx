@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,19 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
     setSuggestions([]);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setOpen(false);
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Delay closing to allow click events on suggestions to fire
+    setTimeout(() => {
+      setOpen(false);
+    }, 200);
+  };
+
   const showSuggestions = value.length > 0 && suggestions.length > 0;
 
   return (
@@ -69,6 +83,8 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
           placeholder="Search articles..."
           value={value}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
           className="w-full bg-secondary text-secondary-foreground"
           onFocus={() => setOpen(true)}
         />
