@@ -13,13 +13,19 @@ serve(async (req) => {
   }
 
   try {
-    const { videoBlob, title, articleId, startTime, duration } = await req.json()
+    const { videoBlob, title, articleId, startTime, duration } = await req.json();
 
-    // Create Supabase client
+    // Create Supabase client with latest configuration
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: true
+        }
+      }
+    );
 
     // Convert base64 to Blob
     const base64Data = videoBlob.split(',')[1];
@@ -47,10 +53,10 @@ serve(async (req) => {
       throw new Error('Failed to upload video clip')
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    // Get public URL with updated method
+    const publicUrl = supabase.storage
       .from('video-clips')
-      .getPublicUrl(fileName)
+      .getPublicUrl(fileName).data.publicUrl;
 
     // Save metadata to database
     const { data: clipData, error: dbError } = await supabase
