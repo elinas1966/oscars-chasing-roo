@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArticleCard } from "./ArticleCard";
-import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
+import { SearchBar } from "./article/SearchBar";
+import { Article } from "@/utils/articleUtils";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -12,6 +13,7 @@ export const ArticleList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -105,10 +107,18 @@ export const ArticleList = () => {
     },
   });
 
+  const filteredArticles = articles?.filter(article =>
+    article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    article.summary.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
-        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+          <Skeleton className="h-10 w-72" />
+        </div>
         <div className="grid gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-40 w-full" />
@@ -120,12 +130,13 @@ export const ArticleList = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
+        {articles && <SearchBar articles={articles} onSearch={setSearchTerm} />}
       </div>
 
       <div className="space-y-8">
-        {articles && articles.map((article) => (
+        {filteredArticles && filteredArticles.map((article) => (
           <ArticleCard
             key={article.id}
             article={article}
