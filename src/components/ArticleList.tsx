@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +41,9 @@ export const ArticleList = () => {
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
       
-      const { data, error } = await query.order("source", { ascending: sortAscending });
+      const { data, error } = await query
+        .order("date", { ascending: false }) // Default sort by date descending
+        .order("source", { ascending: sortAscending }); // Secondary sort by source
       
       if (error) {
         console.error("Error fetching articles:", error);
