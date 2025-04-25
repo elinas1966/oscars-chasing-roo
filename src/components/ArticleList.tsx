@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,14 +17,18 @@ export const ArticleList = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const checkAdminStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      setIsAdmin(data?.role === 'admin');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        setIsAdmin(data?.role === 'admin');
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
     }
   };
 
@@ -34,16 +39,21 @@ export const ArticleList = () => {
   const { data: articles, isLoading } = useQuery({
     queryKey: ["articles"],
     queryFn: async () => {
-      let query = supabase.from("articles").select("*");
-      
-      const { data, error } = await query.order("date", { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching articles:", error);
-        throw error;
+      try {
+        let query = supabase.from("articles").select("*");
+        
+        const { data, error } = await query.order("date", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching articles:", error);
+          throw error;
+        }
+        
+        return data || [];
+      } catch (error) {
+        console.error("Error in articles query:", error);
+        return [];
       }
-      
-      return data as Article[];
     },
   });
 
@@ -107,12 +117,15 @@ export const ArticleList = () => {
     },
   });
 
+  // Ensure articles is always an array, even if it's undefined or null
   const safeArticles = Array.isArray(articles) ? articles : [];
   
-  const filteredArticles = safeArticles.filter(article =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.summary.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredArticles = searchTerm.trim() === "" 
+    ? safeArticles 
+    : safeArticles.filter(article =>
+        (article.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (article.summary || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   if (isLoading) {
     return (
@@ -138,7 +151,7 @@ export const ArticleList = () => {
       </div>
 
       <div className="space-y-8">
-        {filteredArticles && filteredArticles.length > 0 ? (
+        {filteredArticles.length > 0 ? (
           filteredArticles.map((article) => (
             <ArticleCard
               key={article.id}

@@ -37,7 +37,7 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
   const safeArticles = Array.isArray(articles) ? articles : [];
   
   // Generate search suggestions safely
-  const searchSuggestions = safeArticles.length > 0 && value.length > 0
+  const searchSuggestions = value.length > 0 && safeArticles.length > 0
     ? Array.from(
         new Set(
           safeArticles
@@ -80,7 +80,7 @@ export const SearchBar = ({ articles = [], onSearch }: SearchBarProps) => {
                   </CommandItem>
                 ))}
               </CommandGroup>
-              <CommandEmpty>No results found.</CommandEmpty>
+              {searchSuggestions.length === 0 && <CommandEmpty>No results found.</CommandEmpty>}
             </Command>
           </PopoverContent>
         )}
