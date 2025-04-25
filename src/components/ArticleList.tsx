@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, ArrowUpAZ, Calendar } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Calendar, LayoutGrid } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -18,6 +18,8 @@ export const ArticleList = () => {
   const [editForm, setEditForm] = useState<Partial<Article>>({});
   const [sortAscending, setSortAscending] = useState(false);
   const [sortField, setSortField] = useState<'date' | 'source'>('date');
+  const [selectedSource, setSelectedSource] = useState<string | null>(null);
+  const [showAllArticles, setShowAllArticles] = useState(true);
 
   const checkAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -151,71 +153,73 @@ export const ArticleList = () => {
 
   if (isLoading) {
     return (
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="bg-secondary/50 backdrop-blur-sm p-6 rounded-lg border border-primary/10">
-                <Skeleton className="h-4 w-20 mb-4" />
-                <Skeleton className="h-6 w-full mb-3" />
-                <Skeleton className="h-4 w-full mb-4" />
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              </Card>
+      <div className="container mx-auto p-4">
+        <div className="flex gap-8">
+          <div className="w-1/4">
+            <Skeleton className="h-8 w-48 mb-4" />
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full mb-2" />
             ))}
           </div>
+          <div className="w-3/4">
+            <div className="flex justify-between items-center mb-4">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+            <div className="grid gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-40 w-full" />
+              ))}
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     );
   }
 
   const groupedArticles = articles ? groupArticlesBySourceAndDate(articles) : {};
+  const sources = Object.keys(groupedArticles);
+  const filteredArticles = selectedSource && !showAllArticles 
+    ? { [selectedSource]: groupedArticles[selectedSource] }
+    : groupedArticles;
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-12">
-          <div className="flex items-center gap-4">
-            <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSort}
-                className="hover:bg-primary/10"
-                title={sortAscending ? "Sort ascending" : "Sort descending"}
-              >
-                {sortAscending ? (
-                  <ArrowDownAZ className="text-primary" />
-                ) : (
-                  <ArrowUpAZ className="text-primary" />
-                )}
-              </Button>
-              <Button
-                variant={sortField === 'date' ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => handleSortFieldChange('date')}
-                className="hover:bg-primary/10"
-                title="Sort by date"
-              >
-                <Calendar className={sortField === 'date' ? "text-primary" : "text-primary/50"} />
-              </Button>
-              <Button
-                variant={sortField === 'source' ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => handleSortFieldChange('source')}
-                className="hover:bg-primary/10"
-                title="Sort by source"
-              >
-                <ArrowDownAZ className={sortField === 'source' ? "text-primary" : "text-primary/50"} />
-              </Button>
-            </div>
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="font-serif text-4xl text-primary">Latest Coverage</h2>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSort}
+              className="hover:bg-primary/10"
+              title={sortAscending ? "Sort ascending" : "Sort descending"}
+            >
+              {sortAscending ? (
+                <ArrowDownAZ className="text-primary" />
+              ) : (
+                <ArrowUpAZ className="text-primary" />
+              )}
+            </Button>
+            <Button
+              variant={sortField === 'date' ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => handleSortFieldChange('date')}
+              className="hover:bg-primary/10"
+              title="Sort by date"
+            >
+              <Calendar className={sortField === 'date' ? "text-primary" : "text-primary/50"} />
+            </Button>
+            <Button
+              variant={sortField === 'source' ? "secondary" : "ghost"}
+              size="icon"
+              onClick={() => handleSortFieldChange('source')}
+              className="hover:bg-primary/10"
+              title="Sort by source"
+            >
+              <ArrowDownAZ className={sortField === 'source' ? "text-primary" : "text-primary/50"} />
+            </Button>
           </div>
           <select 
             value={selectedLanguage}
@@ -228,33 +232,71 @@ export const ArticleList = () => {
             <option value="FR">French</option>
           </select>
         </div>
-        
-        <div className="space-y-16">
-          {Object.entries(groupedArticles).map(([source, sourceArticles]) => (
-            <div key={source} className="space-y-8">
-              <h3 className="text-3xl font-serif text-primary/90 border-b border-primary/20 pb-4">
+      </div>
+
+      <div className="flex gap-8">
+        <div className="w-1/4 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-serif text-primary/90">Sources</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedSource(null);
+                setShowAllArticles(true);
+              }}
+            >
+              Show All
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {sources.map((source) => (
+              <Button
+                key={source}
+                variant={selectedSource === source && !showAllArticles ? "secondary" : "ghost"}
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setSelectedSource(source);
+                  setShowAllArticles(false);
+                }}
+              >
                 {source}
-              </h3>
-              <div className="grid gap-8 md:grid-cols-2">
-                {sourceArticles.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    isAdmin={isAdmin}
-                    isEditing={editingArticle === article.id}
-                    editForm={editForm}
-                    onEdit={handleEdit}
-                    onDelete={(id) => deleteArticle.mutate(id)}
-                    onCancelEdit={handleCancelEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onEditFormChange={handleEditFormChange}
-                  />
-                ))}
+                <span className="ml-2 text-sm text-muted-foreground">
+                  ({groupedArticles[source].length})
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-3/4">
+          <div className="space-y-8">
+            {Object.entries(filteredArticles).map(([source, sourceArticles]) => (
+              <div key={source} className="space-y-4">
+                <h3 className="text-2xl font-serif text-primary/90 border-b border-primary/20 pb-2">
+                  {source}
+                </h3>
+                <div className="grid gap-4">
+                  {sourceArticles.map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      isAdmin={isAdmin}
+                      isEditing={editingArticle === article.id}
+                      editForm={editForm}
+                      onEdit={handleEdit}
+                      onDelete={(id) => deleteArticle.mutate(id)}
+                      onCancelEdit={handleCancelEdit}
+                      onSaveEdit={handleSaveEdit}
+                      onEditFormChange={handleEditFormChange}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
