@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ArticleCard } from "./ArticleCard";
 import { Article, groupArticlesBySourceAndDate } from "@/utils/articleUtils";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, ArrowUpAZ, Calendar, LayoutGrid } from "lucide-react";
+import { ArrowDownAZ, LayoutGrid } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -17,7 +17,6 @@ export const ArticleList = () => {
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
   const [sortAscending, setSortAscending] = useState(false);
-  const [sortField, setSortField] = useState<'date' | 'source'>('date');
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [showAllArticles, setShowAllArticles] = useState(true);
 
@@ -38,7 +37,7 @@ export const ArticleList = () => {
   }, []);
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["articles", selectedLanguage, sortField, sortAscending],
+    queryKey: ["articles", selectedLanguage, sortAscending],
     queryFn: async () => {
       let query = supabase.from("articles").select("*");
       
@@ -46,7 +45,7 @@ export const ArticleList = () => {
         query = query.eq("language", selectedLanguage);
       }
       
-      const { data, error } = await query.order(sortField, { ascending: sortAscending });
+      const { data, error } = await query.order("source", { ascending: sortAscending });
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -143,14 +142,6 @@ export const ArticleList = () => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSort = () => {
-    setSortAscending(!sortAscending);
-  };
-
-  const handleSortFieldChange = (field: 'date' | 'source') => {
-    setSortField(field);
-  };
-
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
@@ -192,33 +183,11 @@ export const ArticleList = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSort}
+              onClick={() => setSortAscending(!sortAscending)}
               className="hover:bg-primary/10"
               title={sortAscending ? "Sort ascending" : "Sort descending"}
             >
-              {sortAscending ? (
-                <ArrowDownAZ className="text-primary" />
-              ) : (
-                <ArrowUpAZ className="text-primary" />
-              )}
-            </Button>
-            <Button
-              variant={sortField === 'date' ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => handleSortFieldChange('date')}
-              className="hover:bg-primary/10"
-              title="Sort by date"
-            >
-              <Calendar className={sortField === 'date' ? "text-primary" : "text-primary/50"} />
-            </Button>
-            <Button
-              variant={sortField === 'source' ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => handleSortFieldChange('source')}
-              className="hover:bg-primary/10"
-              title="Sort by source"
-            >
-              <ArrowDownAZ className={sortField === 'source' ? "text-primary" : "text-primary/50"} />
+              <ArrowDownAZ className={`text-primary ${sortAscending ? 'rotate-180' : ''}`} />
             </Button>
           </div>
           <select 
