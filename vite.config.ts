@@ -5,7 +5,6 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  // Since this is for username.github.io, we use '/' as the base
   base: '/',
   server: {
     host: "::",
