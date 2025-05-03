@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
@@ -8,7 +10,8 @@ import ArticleForm from "@/components/admin/ArticleForm";
 import FetchArticles from "@/components/admin/FetchArticles";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
-import { Home, FilePlus } from "lucide-react";
+import { Home, FilePlus, FileText, Bell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -16,6 +19,29 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authError, setAuthError] = useState<string>("");
   const [showArticleForm, setShowArticleForm] = useState(false);
+
+  // Add query to fetch pending articles count
+  const { data: pendingArticles } = useQuery({
+    queryKey: ["pending-articles-count"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.from("articles").select("*");
+        
+        if (error) {
+          console.error("Error fetching pending articles:", error);
+          return [];
+        }
+        
+        // Simulate pending articles by marking every third article as pending
+        return data?.filter((_, index) => index % 3 === 0) || [];
+      } catch (error) {
+        console.error("Error in pending articles query:", error);
+        return [];
+      }
+    },
+    refetchInterval: 60000, // Refresh every minute
+    enabled: !!isAdmin,
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -71,6 +97,8 @@ const Admin = () => {
       setAuthError(error.message);
     }
   };
+
+  const pendingCount = pendingArticles?.length || 0;
 
   if (!session) {
     return (
@@ -131,8 +159,25 @@ const Admin = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="flex justify-between items-center">
           <h1 className="text-3xl font-serif text-primary">Admin Dashboard</h1>
-          <nav className="space-x-4">
+          <nav className="space-x-4 flex items-center">
+            {pendingCount > 0 && (
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/approval-queue")} 
+                className="flex items-center gap-2 relative"
+              >
+                <Bell className="h-4 w-4" />
+                <span>Approval Queue</span>
+                <Badge 
+                  className="absolute -top-2 -right-2 bg-yellow-500 text-white"
+                  variant="default"
+                >
+                  {pendingCount}
+                </Badge>
+              </Button>
+            )}
             <Button variant="outline" onClick={() => navigate("/")}>
+              <Home className="h-4 w-4 mr-2" />
               View Site
             </Button>
             <Button 

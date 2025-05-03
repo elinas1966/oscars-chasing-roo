@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +9,7 @@ import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
+import ApprovalQueue from "./pages/ApprovalQueue";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +32,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/approval-queue" element={<ApprovalQueue />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
