@@ -74,6 +74,7 @@ serve(async (req) => {
             url: article.url,
             language: 'EN',
             date: article.publishedAt.split('T')[0], // Keep the original date from the API
+            approved: false, // Mark as not approved by default
           });
           successfulScrapes++;
           gnewsCount++;
@@ -134,6 +135,7 @@ serve(async (req) => {
                 url: item.link,
                 language: 'EN',
                 date: today, // Use today's date for Google search results
+                approved: false, // Mark as not approved by default
               });
               successfulScrapes++;
               googleCount++;

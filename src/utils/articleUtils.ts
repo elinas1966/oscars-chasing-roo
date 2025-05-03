@@ -9,6 +9,7 @@ export interface Article {
   url: string;
   date: string;
   language: string;
+  approved?: boolean;
 }
 
 export const formatSource = (source: string): string => {

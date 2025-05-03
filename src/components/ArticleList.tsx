@@ -41,6 +41,11 @@ export const ArticleList = () => {
     queryFn: async () => {
       try {
         let query = supabase.from("articles").select("*");
+
+        // If not admin, only show approved articles
+        if (!isAdmin) {
+          query = query.eq("approved", true);
+        }
         
         const { data, error } = await query.order("date", { ascending: false });
         
@@ -55,6 +60,10 @@ export const ArticleList = () => {
         return [];
       }
     },
+    refetchOnWindowFocus: false,
+    // Refresh the query when isAdmin changes
+    refetchOnMount: true,
+    enabled: true,
   });
 
   const deleteArticle = useMutation({
@@ -93,6 +102,7 @@ export const ArticleList = () => {
           source: article.source,
           url: article.url,
           language: article.language,
+          approved: article.approved,
         })
         .eq('id', article.id);
       
@@ -112,6 +122,32 @@ export const ArticleList = () => {
       toast({
         title: "Error",
         description: "Failed to update article",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const approveArticle = useMutation({
+    mutationFn: async (articleId: string) => {
+      const { error } = await supabase
+        .from('articles')
+        .update({ approved: true })
+        .eq('id', articleId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toast({
+        title: "Success",
+        description: "Article approved successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error approving article:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve article",
         variant: "destructive",
       });
     },
@@ -146,48 +182,127 @@ export const ArticleList = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
-        <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">Latest Coverage</h2>
+        <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">
+          {isAdmin ? "All Articles" : "Latest Coverage"}
+        </h2>
         <SearchBar articles={safeArticles} onSearch={setSearchTerm} />
       </div>
 
-      <div className="space-y-8">
-        {filteredArticles.length > 0 ? (
-          filteredArticles.map((article) => (
-            <ArticleCard
-              key={article.id}
-              article={article}
-              isAdmin={isAdmin}
-              isEditing={editingArticle === article.id}
-              editForm={editForm}
-              onEdit={(a) => {
-                setEditingArticle(a.id);
-                setEditForm(a);
-              }}
-              onDelete={(id) => deleteArticle.mutate(id)}
-              onCancelEdit={() => {
-                setEditingArticle(null);
-                setEditForm({});
-              }}
-              onSaveEdit={(articleId) => {
-                if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
-                  toast({
-                    title: "Error",
-                    description: "All fields are required",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                updateArticle.mutate({ ...editForm, id: articleId });
-              }}
-              onEditFormChange={(field, value) => {
-                setEditForm(prev => ({ ...prev, [field]: value }));
-              }}
-            />
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">No articles found matching your search.</p>
+      {isAdmin && (
+        <div className="mb-6">
+          <h3 className="text-xl font-medium mb-2">Approval Queue</h3>
+          <div className="bg-secondary/10 p-4 rounded-md">
+            {filteredArticles.filter(article => !article.approved).length === 0 ? (
+              <p className="text-muted-foreground">No articles pending approval.</p>
+            ) : (
+              <div className="space-y-4">
+                {filteredArticles
+                  .filter(article => !article.approved)
+                  .map(article => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      isAdmin={isAdmin}
+                      isEditing={editingArticle === article.id}
+                      editForm={editForm}
+                      onEdit={(a) => {
+                        setEditingArticle(a.id);
+                        setEditForm(a);
+                      }}
+                      onDelete={(id) => deleteArticle.mutate(id)}
+                      onCancelEdit={() => {
+                        setEditingArticle(null);
+                        setEditForm({});
+                      }}
+                      onSaveEdit={(articleId) => {
+                        if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
+                          toast({
+                            title: "Error",
+                            description: "All fields are required",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        updateArticle.mutate({ ...editForm, id: articleId });
+                      }}
+                      onEditFormChange={(field, value) => {
+                        setEditForm(prev => ({ ...prev, [field]: value }));
+                      }}
+                      onApprove={(id) => approveArticle.mutate(id)}
+                      isPending={!article.approved}
+                    />
+                  ))}
+              </div>
+            )}
           </div>
+        </div>
+      )}
+
+      <div className="space-y-8">
+        {isAdmin ? (
+          // For admin users: Show both approved and pending articles
+          filteredArticles.length > 0 ? (
+            <>
+              <h3 className="text-xl font-medium">Published Articles</h3>
+              <div className="space-y-6">
+                {filteredArticles
+                  .filter(article => article.approved)
+                  .map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      isAdmin={isAdmin}
+                      isEditing={editingArticle === article.id}
+                      editForm={editForm}
+                      onEdit={(a) => {
+                        setEditingArticle(a.id);
+                        setEditForm(a);
+                      }}
+                      onDelete={(id) => deleteArticle.mutate(id)}
+                      onCancelEdit={() => {
+                        setEditingArticle(null);
+                        setEditForm({});
+                      }}
+                      onSaveEdit={(articleId) => {
+                        if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
+                          toast({
+                            title: "Error",
+                            description: "All fields are required",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        updateArticle.mutate({ ...editForm, id: articleId });
+                      }}
+                      onEditFormChange={(field, value) => {
+                        setEditForm(prev => ({ ...prev, [field]: value }));
+                      }}
+                      onApprove={(id) => approveArticle.mutate(id)}
+                    />
+                  ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No articles found matching your search.</p>
+            </div>
+          )
+        ) : (
+          // For regular users: Show only approved articles
+          filteredArticles.length > 0 ? (
+            filteredArticles.map((article) => (
+              <ArticleCard
+                key={article.id}
+                article={article}
+                isAdmin={isAdmin}
+                isEditing={false}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No articles found matching your search.</p>
+            </div>
+          )
         )}
       </div>
     </div>

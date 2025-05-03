@@ -14,6 +14,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
 
 interface ArticleFormProps {
   onSuccess?: () => void;
@@ -28,6 +29,7 @@ const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
     source: "",
     url: "",
     language: "EN",
+    approved: false,
   });
 
   const { mutate: addArticle, isPending } = useMutation({
@@ -52,6 +54,7 @@ const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
         source: "",
         url: "",
         language: "EN",
+        approved: false,
       });
       if (onSuccess) {
         onSuccess();
@@ -135,6 +138,19 @@ const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
               <SelectItem value="FR">French</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="approved"
+            checked={formData.approved}
+            onCheckedChange={(checked) =>
+              setFormData({ ...formData, approved: checked })
+            }
+          />
+          <label htmlFor="approved" className="text-sm font-medium">
+            Publish immediately (Skip approval)
+          </label>
         </div>
 
         <Button type="submit" disabled={isPending}>
