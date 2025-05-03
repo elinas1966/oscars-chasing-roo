@@ -29,7 +29,7 @@ export const AdminControls = ({ onEdit, onDelete, onApprove, article }: AdminCon
       >
         <Trash2 className="h-4 w-4" />
       </Button>
-      {!article.approved && onApprove && (
+      {article.approved === false && onApprove && (
         <Button
           variant="ghost"
           size="icon"
