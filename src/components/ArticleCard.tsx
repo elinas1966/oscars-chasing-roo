@@ -67,6 +67,7 @@ export const ArticleCard = ({
               article={article}
               onEdit={onEdit}
               onDelete={onDelete}
+              onApprove={onApprove}
             />
           )}
         </div>
