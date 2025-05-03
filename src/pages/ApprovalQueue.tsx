@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +43,38 @@ const ApprovalQueue = () => {
     }
   };
 
-  const { data: articles, isLoading } = useQuery({
+  const { data: allArticles, isLoading: isLoadingAllArticles } = useQuery({
+    queryKey: ["articles"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .order("date", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching all articles:", error);
+          throw error;
+        }
+        
+        // Process the data to add the approved flag
+        const processedData = data?.map(article => ({
+          ...article,
+          approved: true // All articles from the main list are considered approved
+        })) || [];
+        
+        return processedData;
+      } catch (error) {
+        console.error("Error in all articles query:", error);
+        return [];
+      }
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    enabled: true,
+  });
+
+  const { data: pendingArticles, isLoading } = useQuery({
     queryKey: ["articles-pending"],
     queryFn: async () => {
       try {
@@ -73,6 +103,23 @@ const ApprovalQueue = () => {
     refetchOnMount: true,
     enabled: true,
   });
+
+  // Function to filter out articles that are already published
+  const filterOutPublishedArticles = () => {
+    if (!pendingArticles || !allArticles) return [];
+    
+    // Get IDs of published articles
+    const publishedIds = new Set(
+      allArticles
+        .filter(article => article.approved)
+        .map(article => article.id)
+    );
+    
+    // Filter pending articles that are not in the published set
+    return pendingArticles.filter(article => !publishedIds.has(article.id));
+  };
+
+  const trulyPendingArticles = filterOutPublishedArticles();
 
   const approveArticle = useMutation({
     mutationFn: async (articleId: string) => {
@@ -111,9 +158,9 @@ const ApprovalQueue = () => {
   });
 
   const approveAllArticles = () => {
-    if (!articles || articles.length === 0) return;
+    if (!trulyPendingArticles || trulyPendingArticles.length === 0) return;
     
-    articles.forEach(article => {
+    trulyPendingArticles.forEach(article => {
       approveArticle.mutate(article.id);
     });
   };
@@ -207,7 +254,7 @@ const ApprovalQueue = () => {
     return <div className="p-8 text-center">Checking permissions...</div>;
   }
 
-  if (isLoading) {
+  if (isLoading || isLoadingAllArticles) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
@@ -220,7 +267,7 @@ const ApprovalQueue = () => {
     );
   }
 
-  const pendingCount = articles?.length || 0;
+  const pendingCount = trulyPendingArticles.length || 0;
 
   return (
     <main className="min-h-screen bg-background p-6">
@@ -263,8 +310,8 @@ const ApprovalQueue = () => {
         </div>
 
         <section aria-label="Approval Queue" className="space-y-4">
-          {articles && articles.length > 0 ? (
-            articles.map((article) => (
+          {trulyPendingArticles.length > 0 ? (
+            trulyPendingArticles.map((article) => (
               <ArticleCard
                 key={article.id}
                 article={article}
