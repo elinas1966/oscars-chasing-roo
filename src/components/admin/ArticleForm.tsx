@@ -34,20 +34,34 @@ const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
 
   const { mutate: addArticle, isPending } = useMutation({
     mutationFn: async (articleData: typeof formData) => {
-      const { error } = await supabase.from("articles").insert([
+      // Make sure we have a properly formatted date
+      const formattedDate = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase.from("articles").insert([
         {
-          ...articleData,
-          date: new Date().toISOString().split('T')[0],
+          title: articleData.title,
+          summary: articleData.summary,
+          source: articleData.source,
+          url: articleData.url,
+          language: articleData.language,
+          date: formattedDate,
         }
-      ]);
+      ]).select();
+      
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
+      // Invalidate both regular articles and admin articles queries
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-published-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-pending-articles"] });
+      
       toast({
         title: "Success",
         description: "Article added successfully",
       });
+      
       setFormData({
         title: "",
         summary: "",
@@ -56,11 +70,13 @@ const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
         language: "EN",
         approved: false,
       });
+      
       if (onSuccess) {
         onSuccess();
       }
     },
     onError: (error) => {
+      console.error("Error adding article:", error);
       toast({
         title: "Error",
         description: "Failed to add article: " + error.message,

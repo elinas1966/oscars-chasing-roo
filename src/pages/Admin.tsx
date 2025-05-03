@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +35,6 @@ const Admin = () => {
           return [];
         }
         
-        // All articles from the main table are considered published/approved
         return data || [];
       } catch (error) {
         console.error("Error in published articles query:", error);
@@ -50,15 +50,19 @@ const Admin = () => {
     queryKey: ["admin-pending-articles"],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase.from("articles").select("*");
+        const { data, error } = await supabase
+          .from("pending_articles") // This should be your actual pending articles table
+          .select("*");
         
         if (error) {
           console.error("Error fetching pending articles:", error);
-          return [];
+          // If there's an error (like table doesn't exist yet), fallback to simulated data
+          const publishedData = await supabase.from("articles").select("*");
+          // Simulate pending articles for demonstration
+          return publishedData.data?.filter((_, index) => index % 3 === 0) || [];
         }
         
-        // Simulate pending articles by marking every third article as pending
-        return data?.filter((_, index) => index % 3 === 0) || [];
+        return data || [];
       } catch (error) {
         console.error("Error in pending articles query:", error);
         return [];
@@ -72,15 +76,14 @@ const Admin = () => {
   const trulyPendingArticles = React.useMemo(() => {
     if (!pendingArticles || !publishedArticles) return [];
     
-    // Get IDs of all articles (simulating published articles)
+    // Get IDs of all published articles
     const publishedIds = new Set(
       publishedArticles.map((article: Article) => article.id)
     );
     
     // Filter pending articles that are not in the published set
-    // For demonstration, we'll consider only those with index % 3 === 0 but NOT index % 6 === 0
-    return pendingArticles.filter((article: Article, index: number) => 
-      index % 3 === 0 && index % 6 !== 0
+    return pendingArticles.filter((article: Article) => 
+      !publishedIds.has(article.id)
     );
   }, [pendingArticles, publishedArticles]);
 
