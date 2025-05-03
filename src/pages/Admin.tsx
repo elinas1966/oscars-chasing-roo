@@ -21,7 +21,7 @@ const Admin = () => {
   const [authError, setAuthError] = useState<string>("");
   const [showArticleForm, setShowArticleForm] = useState(false);
 
-  // Add query to fetch all published articles to compare against pending
+  // Add query to fetch all published articles
   const { data: publishedArticles } = useQuery({
     queryKey: ["admin-published-articles"],
     queryFn: async () => {
@@ -45,26 +45,26 @@ const Admin = () => {
     enabled: !!isAdmin,
   });
 
-  // Add query to fetch pending articles
-  const { data: pendingArticles } = useQuery({
+  // Create simulated pending articles from a portion of the existing articles
+  const { data: simulatedPendingArticles } = useQuery({
     queryKey: ["admin-pending-articles"],
     queryFn: async () => {
       try {
+        // Use the existing articles table since pending_articles doesn't exist
         const { data, error } = await supabase
-          .from("pending_articles") // This should be your actual pending articles table
+          .from("articles")
           .select("*");
         
         if (error) {
-          console.error("Error fetching pending articles:", error);
-          // If there's an error (like table doesn't exist yet), fallback to simulated data
-          const publishedData = await supabase.from("articles").select("*");
-          // Simulate pending articles for demonstration
-          return publishedData.data?.filter((_, index) => index % 3 === 0) || [];
+          console.error("Error fetching articles for simulation:", error);
+          return [];
         }
         
-        return data || [];
+        // Simulate pending articles by taking every third article
+        // This is just for demonstration purposes until a real pending_articles table exists
+        return data?.filter((_, index) => index % 3 === 0) || [];
       } catch (error) {
-        console.error("Error in pending articles query:", error);
+        console.error("Error in simulated pending articles query:", error);
         return [];
       }
     },
@@ -74,18 +74,15 @@ const Admin = () => {
 
   // Filter out pending articles that are already published
   const trulyPendingArticles = React.useMemo(() => {
-    if (!pendingArticles || !publishedArticles) return [];
+    if (!simulatedPendingArticles || !publishedArticles) return [];
     
-    // Get IDs of all published articles
-    const publishedIds = new Set(
-      publishedArticles.map((article: Article) => article.id)
-    );
-    
-    // Filter pending articles that are not in the published set
-    return pendingArticles.filter((article: Article) => 
-      !publishedIds.has(article.id)
-    );
-  }, [pendingArticles, publishedArticles]);
+    // For this simulation, we'll consider articles with ID % 3 === 0 as pending
+    // and we'll filter out those with ID % 6 === 0 to simulate some being already published
+    return (simulatedPendingArticles as Article[]).filter((article: Article) => {
+      const articleId = parseInt(article.id);
+      return articleId % 3 === 0 && articleId % 6 !== 0;
+    });
+  }, [simulatedPendingArticles, publishedArticles]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
