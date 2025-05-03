@@ -74,26 +74,23 @@ const ApprovalQueue = () => {
     enabled: true,
   });
 
-  const { data: pendingArticles, isLoading } = useQuery({
+  // Fetch potential pending articles (in our case, we're simulating them)
+  const { data: pendingArticlesData, isLoading } = useQuery({
     queryKey: ["articles-pending"],
     queryFn: async () => {
       try {
-        let query = supabase.from("articles").select("*");
-        const { data, error } = await query.order("date", { ascending: false });
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .order("date", { ascending: false });
         
         if (error) {
           console.error("Error fetching articles:", error);
           throw error;
         }
         
-        // Simulate pending articles for demonstration
-        const processedData = data?.map((article, index) => ({
-          ...article,
-          approved: index % 3 !== 0 // Make every third article pending
-        })) || [];
-        
-        // Filter to only show pending articles
-        return processedData.filter(article => !article.approved);
+        // Simulate pending articles using the same logic as in Admin.tsx
+        return data || [];
       } catch (error) {
         console.error("Error in pending articles query:", error);
         return [];
@@ -104,22 +101,19 @@ const ApprovalQueue = () => {
     enabled: true,
   });
 
-  // Function to filter out articles that are already published
-  const filterOutPublishedArticles = () => {
-    if (!pendingArticles || !allArticles) return [];
+  // Function to filter pending articles using same logic as Admin page
+  const trulyPendingArticles = React.useMemo(() => {
+    if (!pendingArticlesData) return [];
     
-    // Get IDs of published articles
-    const publishedIds = new Set(
-      allArticles
-        .filter(article => article.approved)
-        .map(article => article.id)
-    );
-    
-    // Filter pending articles that are not in the published set
-    return pendingArticles.filter(article => !publishedIds.has(article.id));
-  };
-
-  const trulyPendingArticles = filterOutPublishedArticles();
+    // In this simulation, we'll consider an article as "truly pending" 
+    // if its ID is divisible by 3 but not by 6
+    // This is just to simulate some pending articles with a consistent logic
+    return pendingArticlesData.filter((article: any) => {
+      if (!article.id) return false;
+      const articleId = parseInt(article.id);
+      return !isNaN(articleId) && articleId % 3 === 0 && articleId % 6 !== 0;
+    });
+  }, [pendingArticlesData]);
 
   const approveArticle = useMutation({
     mutationFn: async (articleId: string) => {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,15 +73,17 @@ const Admin = () => {
 
   // Filter out pending articles that are already published
   const trulyPendingArticles = React.useMemo(() => {
-    if (!simulatedPendingArticles || !publishedArticles) return [];
+    if (!simulatedPendingArticles) return [];
     
-    // For this simulation, we'll consider articles with ID % 3 === 0 as pending
-    // and we'll filter out those with ID % 6 === 0 to simulate some being already published
+    // In this simulation, we'll consider an article as "truly pending" 
+    // if its ID is divisible by 3 but not by 6
+    // This is just to simulate some pending articles with a consistent logic
     return (simulatedPendingArticles as Article[]).filter((article: Article) => {
+      if (!article.id) return false;
       const articleId = parseInt(article.id);
-      return articleId % 3 === 0 && articleId % 6 !== 0;
+      return !isNaN(articleId) && articleId % 3 === 0 && articleId % 6 !== 0;
     });
-  }, [simulatedPendingArticles, publishedArticles]);
+  }, [simulatedPendingArticles]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
