@@ -9,13 +9,14 @@ import FetchArticles from "@/components/admin/FetchArticles";
 import { GoogleSearch } from "@/components/GoogleSearch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
-import { Home } from "lucide-react";
+import { Home, FilePlus } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authError, setAuthError] = useState<string>("");
+  const [showArticleForm, setShowArticleForm] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -147,13 +148,26 @@ const Admin = () => {
         <section aria-label="Search Tools">
           <GoogleSearch />
         </section>
+        
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-medium">Article Management</h2>
+          <Button 
+            onClick={() => setShowArticleForm(!showArticleForm)} 
+            className="gap-2"
+          >
+            <FilePlus className="h-4 w-4" />
+            {showArticleForm ? "Hide Form" : "Add New Article"}
+          </Button>
+        </div>
+
+        {showArticleForm && (
+          <section aria-label="New Article Form" className="bg-muted/30 p-4 rounded-lg border">
+            <ArticleForm onSuccess={() => setShowArticleForm(false)} />
+          </section>
+        )}
 
         <section aria-label="Article Management">
           <FetchArticles />
-        </section>
-
-        <section aria-label="New Article Form">
-          <ArticleForm />
         </section>
       </div>
     </main>
