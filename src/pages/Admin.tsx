@@ -6,7 +6,6 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import ArticleForm from "@/components/admin/ArticleForm";
 import FetchArticles from "@/components/admin/FetchArticles";
-import { GoogleSearch } from "@/components/GoogleSearch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
 import { Home, FilePlus } from "lucide-react";
@@ -145,10 +144,6 @@ const Admin = () => {
           </nav>
         </header>
 
-        <section aria-label="Search Tools">
-          <GoogleSearch />
-        </section>
-        
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-medium">Article Management</h2>
           <Button 
