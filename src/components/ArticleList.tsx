@@ -6,8 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArticleCard } from "./ArticleCard";
 import { SearchBar } from "./article/SearchBar";
 import { Article } from "@/utils/articleUtils";
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
 
 export const ArticleList = () => {
   const { toast } = useToast();
@@ -16,7 +14,6 @@ export const ArticleList = () => {
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [showApprovalQueue, setShowApprovalQueue] = useState(true);
 
   const checkAdminStatus = async () => {
     try {
@@ -134,37 +131,6 @@ export const ArticleList = () => {
     },
   });
 
-  const approveArticle = useMutation({
-    mutationFn: async (articleId: string) => {
-      // Since we don't have the approved column in the database yet,
-      // we'll simulate the approval by just returning success
-      // In a real application, you would update the approval status in the database
-      return { success: true };
-    },
-    onSuccess: (_, articleId) => {
-      // Instead of just invalidating the query, we'll directly update the cache
-      queryClient.setQueryData(["articles"], (oldData: any) => {
-        if (!Array.isArray(oldData)) return oldData;
-        return oldData.map((article: Article) => 
-          article.id === articleId ? { ...article, approved: true } : article
-        );
-      });
-      
-      toast({
-        title: "Success",
-        description: "Article approved successfully",
-      });
-    },
-    onError: (error) => {
-      console.error('Error approving article:', error);
-      toast({
-        title: "Error",
-        description: "Failed to approve article",
-        variant: "destructive",
-      });
-    },
-  });
-
   const safeArticles = Array.isArray(articles) ? articles : [];
   
   const filteredArticles = searchTerm.trim() === "" 
@@ -175,15 +141,8 @@ export const ArticleList = () => {
         (article.source || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-  // For demonstration purposes, let's simulate some articles as pending approval
-  const articlesWithApprovalStatus = filteredArticles.map((article, index) => ({
-    ...article,
-    approved: index % 3 !== 0 // Make every third article pending approval for demo
-  }));
-
-  // Get the list of pending articles
-  const pendingArticles = articlesWithApprovalStatus.filter(article => !article.approved);
-  const approvedArticles = articlesWithApprovalStatus.filter(article => article.approved);
+  // Only display approved articles on the home page
+  const approvedArticles = filteredArticles.filter(article => article.approved);
 
   if (isLoading) {
     return (
@@ -205,127 +164,49 @@ export const ArticleList = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
         <h2 className="font-serif text-4xl text-primary break-words max-w-[600px]">
-          {isAdmin ? "All Articles" : "Latest Coverage"}
+          Latest Coverage
         </h2>
         <SearchBar articles={safeArticles} onSearch={setSearchTerm} />
       </div>
 
-      {isAdmin && showApprovalQueue && pendingArticles.length > 0 && (
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-medium">Approval Queue</h3>
-            <Button 
-              onClick={() => setShowApprovalQueue(false)} 
-              variant="outline"
-              className="gap-2"
-            >
-              <Check className="h-4 w-4" />
-              Done
-            </Button>
-          </div>
-          <div className="bg-secondary/10 p-4 rounded-md">
-            <div className="space-y-4">
-              {pendingArticles.map(article => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  isAdmin={isAdmin}
-                  isEditing={editingArticle === article.id}
-                  editForm={editForm}
-                  onEdit={(a) => {
-                    setEditingArticle(a.id);
-                    setEditForm(a);
-                  }}
-                  onDelete={(id) => deleteArticle.mutate(id)}
-                  onCancelEdit={() => {
-                    setEditingArticle(null);
-                    setEditForm({});
-                  }}
-                  onSaveEdit={(articleId) => {
-                    if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
-                      toast({
-                        title: "Error",
-                        description: "All fields are required",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    updateArticle.mutate({ ...editForm, id: articleId });
-                  }}
-                  onEditFormChange={(field, value) => {
-                    setEditForm(prev => ({ ...prev, [field]: value }));
-                  }}
-                  onApprove={(id) => approveArticle.mutate(id)}
-                  isPending={!article.approved}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-8">
-        {isAdmin ? (
-          // For admin users: Show published articles
-          approvedArticles.length > 0 ? (
-            <>
-              <h3 className="text-xl font-medium">Published Articles</h3>
-              <div className="space-y-6">
-                {approvedArticles.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    isAdmin={isAdmin}
-                    isEditing={editingArticle === article.id}
-                    editForm={editForm}
-                    onEdit={(a) => {
-                      setEditingArticle(a.id);
-                      setEditForm(a);
-                    }}
-                    onDelete={(id) => deleteArticle.mutate(id)}
-                    onCancelEdit={() => {
-                      setEditingArticle(null);
-                      setEditForm({});
-                    }}
-                    onSaveEdit={(articleId) => {
-                      if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
-                        toast({
-                          title: "Error",
-                          description: "All fields are required",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      updateArticle.mutate({ ...editForm, id: articleId });
-                    }}
-                    onEditFormChange={(field, value) => {
-                      setEditForm(prev => ({ ...prev, [field]: value }));
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No articles found matching your search.</p>
-            </div>
-          )
+        {approvedArticles.length > 0 ? (
+          approvedArticles.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              isAdmin={isAdmin}
+              isEditing={editingArticle === article.id}
+              editForm={editForm}
+              onEdit={(a) => {
+                setEditingArticle(a.id);
+                setEditForm(a);
+              }}
+              onDelete={(id) => deleteArticle.mutate(id)}
+              onCancelEdit={() => {
+                setEditingArticle(null);
+                setEditForm({});
+              }}
+              onSaveEdit={(articleId) => {
+                if (!editForm.title || !editForm.summary || !editForm.source || !editForm.url) {
+                  toast({
+                    title: "Error",
+                    description: "All fields are required",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                updateArticle.mutate({ ...editForm, id: articleId });
+              }}
+              onEditFormChange={(field, value) => {
+                setEditForm(prev => ({ ...prev, [field]: value }));
+              }}
+            />
+          ))
         ) : (
-          // For regular users: Show only approved articles
-          approvedArticles.length > 0 ? (
-            approvedArticles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                isAdmin={isAdmin}
-                isEditing={false}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No articles found matching your search.</p>
-            </div>
-          )
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No articles found matching your search.</p>
+          </div>
         )}
       </div>
     </div>
