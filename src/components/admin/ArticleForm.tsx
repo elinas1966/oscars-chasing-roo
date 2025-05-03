@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,11 @@ import { Card } from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const ArticleForm = () => {
+interface ArticleFormProps {
+  onSuccess?: () => void;
+}
+
+const ArticleForm = ({ onSuccess }: ArticleFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
@@ -48,6 +53,9 @@ const ArticleForm = () => {
         url: "",
         language: "EN",
       });
+      if (onSuccess) {
+        onSuccess();
+      }
     },
     onError: (error) => {
       toast({
