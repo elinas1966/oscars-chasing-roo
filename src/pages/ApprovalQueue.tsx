@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ const ApprovalQueue = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Article>>({});
+  const [isEmptyQueue, setIsEmptyQueue] = useState(false);
 
   useEffect(() => {
     checkAdminStatus();
@@ -42,37 +44,6 @@ const ApprovalQueue = () => {
       navigate("/admin");
     }
   };
-
-  const { data: allArticles, isLoading: isLoadingAllArticles } = useQuery({
-    queryKey: ["articles"],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("articles")
-          .select("*")
-          .order("date", { ascending: false });
-        
-        if (error) {
-          console.error("Error fetching all articles:", error);
-          throw error;
-        }
-        
-        // Process the data to add the approved flag
-        const processedData = data?.map(article => ({
-          ...article,
-          approved: true // All articles from the main list are considered approved
-        })) || [];
-        
-        return processedData;
-      } catch (error) {
-        console.error("Error in all articles query:", error);
-        return [];
-      }
-    },
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    enabled: true,
-  });
 
   // Fetch potential pending articles (in our case, we're simulating them)
   const { data: pendingArticlesData, isLoading } = useQuery({
@@ -115,6 +86,28 @@ const ApprovalQueue = () => {
     });
   }, [pendingArticlesData]);
 
+  // Effect to check if queue is empty and redirect if so
+  useEffect(() => {
+    // Only run this effect when we have data and we're not loading
+    if (!isLoading && trulyPendingArticles.length === 0 && isAdmin) {
+      // Set a flag to indicate queue is empty
+      setIsEmptyQueue(true);
+      
+      // Show a toast notification
+      toast({
+        title: "Approval Queue Empty",
+        description: "All articles have been processed. Redirecting to admin dashboard.",
+      });
+      
+      // Redirect after a short delay
+      const redirectTimer = setTimeout(() => {
+        navigate("/admin");
+      }, 2500); // Wait 2.5 seconds before redirecting
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [trulyPendingArticles, isLoading, isAdmin, navigate, toast]);
+
   const approveArticle = useMutation({
     mutationFn: async (articleId: string) => {
       // Since we don't have the approved column in the database yet,
@@ -135,6 +128,12 @@ const ApprovalQueue = () => {
           article.id === articleId ? { ...article, approved: true } : article
         );
       });
+      
+      // Invalidate both queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["articles-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-pending-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-published-articles"] });
       
       toast({
         title: "Success",
@@ -179,6 +178,12 @@ const ApprovalQueue = () => {
         if (!Array.isArray(oldData)) return oldData;
         return oldData.filter((article: Article) => article.id !== articleId);
       });
+      
+      // Invalidate all relevant queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["articles-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-pending-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-published-articles"] });
       
       toast({
         title: "Success",
@@ -227,6 +232,12 @@ const ApprovalQueue = () => {
       updateCache(["articles-pending"]);
       updateCache(["articles"]);
       
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["articles-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-pending-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-published-articles"] });
+      
       setEditingArticle(null);
       setEditForm({});
       toast({
@@ -248,7 +259,7 @@ const ApprovalQueue = () => {
     return <div className="p-8 text-center">Checking permissions...</div>;
   }
 
-  if (isLoading || isLoadingAllArticles) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
@@ -256,6 +267,39 @@ const ApprovalQueue = () => {
             <h1 className="text-3xl font-serif text-primary">Article Approval Queue</h1>
           </div>
           <div className="text-center py-12">Loading approval queue...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // If the queue is empty and we're showing the empty state before redirecting
+  if (isEmptyQueue) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <header className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" onClick={() => navigate("/admin")} size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-serif text-primary">Article Approval Queue</h1>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" /> 
+              View Site
+            </Button>
+          </header>
+          <div className="flex flex-col items-center justify-center py-12 bg-muted/30 rounded-lg border text-center space-y-4">
+            <p className="text-muted-foreground text-xl">All articles have been processed!</p>
+            <p className="text-muted-foreground">Redirecting to admin dashboard...</p>
+            <Button onClick={() => navigate("/admin")} className="mt-4">
+              Return to Admin
+            </Button>
+          </div>
         </div>
       </div>
     );

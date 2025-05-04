@@ -21,7 +21,7 @@ const Admin = () => {
   const [showArticleForm, setShowArticleForm] = useState(false);
 
   // Add query to fetch all published articles
-  const { data: publishedArticles } = useQuery({
+  const { data: publishedArticles, refetch: refetchPublished } = useQuery({
     queryKey: ["admin-published-articles"],
     queryFn: async () => {
       try {
@@ -45,7 +45,7 @@ const Admin = () => {
   });
 
   // Create simulated pending articles from a portion of the existing articles
-  const { data: simulatedPendingArticles } = useQuery({
+  const { data: simulatedPendingArticles, refetch: refetchPending } = useQuery({
     queryKey: ["admin-pending-articles"],
     queryFn: async () => {
       try {
@@ -70,6 +70,14 @@ const Admin = () => {
     refetchInterval: 60000, // Refresh every minute
     enabled: !!isAdmin,
   });
+
+  // Effect to refresh data when component mounts (after returning from approval queue)
+  useEffect(() => {
+    if (isAdmin) {
+      refetchPublished();
+      refetchPending();
+    }
+  }, [isAdmin, refetchPublished, refetchPending]);
 
   // Filter out pending articles that are already published
   const trulyPendingArticles = React.useMemo(() => {
