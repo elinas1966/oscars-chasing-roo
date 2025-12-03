@@ -6,7 +6,7 @@ export const Hero = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="relative h-[80vh] flex items-center justify-center text-center px-4 bg-gradient-to-b from-black/60 to-background"
+      className="relative h-[65vh] flex items-center justify-center text-center px-4 bg-gradient-to-b from-black/60 to-background"
     >
       <div className="max-w-4xl mx-auto">
         <h1 className="font-serif text-6xl md:text-7xl lg:text-8xl mb-6 text-white bg-clip-text">
